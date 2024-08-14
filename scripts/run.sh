@@ -3,6 +3,20 @@ set -Euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 IFS=$'\n\t'
 
+# XRD Write locations
+XRDWURL="xroots://dtn2201.jlab.org/"
+XRDWBASE=${XRDWBASE:-"/eic/eic2/EPIC"}
+
+# XRD Read locations
+XRDRURL="root://dtn-eic.jlab.org/"
+XRDRBASE="/work/eic2/EPIC"
+
+# Check xrootd connectivity
+export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
+if !(httokendecode -H && xrdfs ${XRDWURL} ls ${XRDWBASE} && xrdfs ${XRDRURL} ls ${XRDRBASE}); then
+  echo "Cannot establish connection to xrootd for reading/writing"
+fi
+
 # Load job environment (mask secrets)
 if ls environment*.sh ; then
   grep -v BEARER environment*.sh
@@ -62,14 +76,6 @@ fi
 
 # Output location
 BASEDIR=${DATADIR:-${PWD}}
-
-# XRD Write locations
-XRDWURL="xroots://dtn2201.jlab.org/"
-XRDWBASE=${XRDWBASE:-"/eic/eic2/EPIC"}
-
-# XRD Read locations
-XRDRURL="root://dtn-eic.jlab.org/"
-XRDRBASE="/work/eic2/EPIC"
 
 # Local temp dir
 echo "SLURM_TMPDIR=${SLURM_TMPDIR:-}"
@@ -157,9 +163,10 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
 if [ "${COPYFULL:-false}" == "true" ] ; then
   # Token for write authentication
   export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
-  xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR} || echo "Cannot write simulation outputs to xrootd server" 
-  xrdcp --force --recursive ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${XRDWURL}/${XRDWBASE}/${FULL_DIR} || \
-  cp ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${BASEDIR}/${FULL_DIR} || true
+  if !(xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR} \
+  && xrdcp --force --recursive ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${XRDWURL}/${XRDWBASE}/${FULL_DIR}); then 
+     echo "Cannot write simulation outputs to xrootd server"; exit 1; 
+  fi
 fi
 
 # Run eicrecon reconstruction
@@ -186,16 +193,18 @@ ls -al ${LOG_TEMP}/${TASKNAME}.*
 if [ "${COPYRECO:-false}" == "true" ] ; then
   # Token for write authentication
   export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
-  xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR} || echo "Cannot write reconstructed outputs to xrootd server"
-  xrdcp --force --recursive ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${XRDWURL}/${XRDWBASE}/${RECO_DIR} || \
-  cp ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${BASEDIR}/${RECO_DIR} || true
+  if !(xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR} \
+  && xrdcp --force --recursive ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${XRDWURL}/${XRDWBASE}/${RECO_DIR}); then 
+    echo "Cannot write reconstructed outputs to xrootd server"; exit 1;
+  fi
 fi
 if [ "${COPYLOG:-false}" == "true" ] ; then
   # Token for write authentication
   export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
-  xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR} || echo "Cannot write log outputs to xrootd server"
-  xrdcp --force --recursive ${LOG_TEMP}/${TASKNAME}.* ${XRDWURL}/${XRDWBASE}/${LOG_DIR} || \
-  cp ${LOG_TEMP}/${TASKNAME}.* ${BASEDIR}/${LOG_DIR} || true
+  if !(xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR} \
+  && xrdcp --force --recursive ${LOG_TEMP}/${TASKNAME}.* ${XRDWURL}/${XRDWBASE}/${LOG_DIR}); then
+    echo "Cannot write log outputs to xrootd server"; exit 1; 
+  fi
 fi
 
 # closeout

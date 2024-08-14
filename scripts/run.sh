@@ -37,7 +37,7 @@ test -f .machine.ad && cat .machine.ad
 
 # Load container environment (include ${DETECTOR_VERSION})
 export DETECTOR_CONFIG_REQUESTED=${DETECTOR_CONFIG:-}
-source /opt/detector/epic-${DETECTOR_VERSION:-main}/bin/thisepic.sh
+export DETECTOR_PATH=/opt/detector/epic-${DETECTOR_VERSION:-main}/share/epic
 export DETECTOR_CONFIG=${DETECTOR_CONFIG_REQUESTED:-${DETECTOR_CONFIG:-$DETECTOR}}
 
 # Argument parsing

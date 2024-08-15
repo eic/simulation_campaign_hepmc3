@@ -13,7 +13,7 @@ XRDRBASE="/work/eic2/EPIC"
 
 # Check xrootd connectivity
 export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
-if !(httokendecode -H && xrdfs ${XRDWURL} ls ${XRDWBASE} && xrdfs ${XRDRURL} ls ${XRDRBASE}); then
+if !(httokendecode -H | grep -v "jti" && xrdfs ${XRDWURL} ls ${XRDWBASE} && xrdfs ${XRDRURL} ls ${XRDRBASE}); then
   echo "Cannot establish connection to xrootd for reading/writing"
 fi
 

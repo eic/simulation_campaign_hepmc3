@@ -157,7 +157,7 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
   INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
   # Don't skip events on the background merged file
   SKIP_N_EVENTS=0
-}
+} 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.hepmcmerger.log | tail -n1000
 
 # Run simulation
 {

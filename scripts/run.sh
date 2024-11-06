@@ -144,13 +144,13 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
     --signalFile ${INPUT_FILE} \
     --bg1Freq ${BG1_FREQ:-""} \
     --bg1File ${BG1_FILE:-""} \
-    --bg1Skip ${BG1_SKIP:-""} \
+    --bg1Skip ${BG1_SKIP:-0} \
     --bg2Freq ${BG2_FREQ:-""} \
     --bg2File ${BG2_FILE:-""} \
-    --bg2Skip ${BG2_SKIP:-""} \
+    --bg2Skip ${BG2_SKIP:-0} \
     --bg3Freq ${BG3_FREQ:-""} \
     --bg3File ${BG3_FILE:-""} \
-    --bg3Skip ${BG3_SKIP:-""} \
+    --bg3Skip ${BG3_SKIP:-0} \
     --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
   # Use background merged file as input for next stage

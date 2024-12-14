@@ -73,11 +73,6 @@ XRDWBASE=${XRDWBASE:-"/eic/eic2/EPIC"}
 XRDRURL=${XRDRURL-"root://dtn-eic.jlab.org/"}
 XRDRBASE=${XRDRBASE:-"/work/eic2/EPIC"}
 
-# RUCIO
-RSEURL="https://dtn-rucio.jlab.org:1094/"
-RSENAME="EIC-XRD"
-RSESCOPE="EPIC"
-
 # Local temp dir
 echo "SLURM_TMPDIR=${SLURM_TMPDIR:-}"
 echo "SLURM_JOB_ID=${SLURM_JOB_ID:-}"

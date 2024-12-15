@@ -20,6 +20,8 @@ file_path = args.file_path
 file_size = args.file_size
 parent_dir=os.path.dirname(file_path)
 
+client=Client()
+
 try:
     client.add_dataset(scope=scope, name=parent_dir)
 except exception.DataIdentifierAlreadyExists:

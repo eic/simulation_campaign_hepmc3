@@ -43,10 +43,10 @@ export DETECTOR_VERSION=${DETECTOR_VERSION_REQUESTED}
 export DETECTOR_CONFIG=${DETECTOR_CONFIG_REQUESTED:-${DETECTOR_CONFIG:-$DETECTOR}}
 
 # Argument parsing
-# - input file extension
-EXTENSION=${1}
-# - input file
-INPUT_FILE_REQUESTED=${2}
+# - input file basename
+BASENAME=${1}
+# - input file extension to determine type of simulation
+EXTENSION=${2}
 # - number of events
 EVENTS_PER_TASK=${3:-10000}
 # - current chunk (zero-based)
@@ -96,8 +96,7 @@ mkdir -p ${TMPDIR}
 ls -al ${TMPDIR}
 
 # Input file parsing
-INPUT_FILE=${INPUT_FILE_REQUESTED}.${EXTENSION}
-BASENAME=${INPUT_FILE_REQUESTED}
+INPUT_FILE=${BASENAME}.${EXTENSION}
 TASKNAME=${BASENAME}${TASK}
 INPUT_DIR=$(dirname $(realpath --canonicalize-missing --relative-to=${BASEDIR} ${INPUT_FILE}))
 # - file.hepmc              -> TAG="", and avoid double // in S3 location

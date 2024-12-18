@@ -143,31 +143,34 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
     --filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt \
     --json-summary ${LOG_TEMP}/${TASKNAME}.npsim.prmon.json \
     -- \
+  # Common flags shared by both types of simulation
+  common_flags=(
+    --random.seed ${SEED:-1}
+    --random.enableEventSeed
+    --printLevel WARNING
+    --filter.tracker 'edep0'
+    --numberOfEvents ${EVENTS_PER_TASK}
+    --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+  )
+  # Uncommon flags based on EXTENSION
   if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
-    npsim \
-      --runType batch \
-      --random.seed ${SEED:-1} \
-      --random.enableEventSeed \
-      --printLevel WARNING \
-      --skipNEvents ${SKIP_N_EVENTS} \
-      --numberOfEvents ${EVENTS_PER_TASK} \
-      --filter.tracker 'edep0' \
-      --hepmc3.useHepMC3 ${USEHEPMC3:-true} \
-      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml \
-      --inputFiles ${INPUT_FILE} \
-      --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+    uncommon_flags=(
+      --runType batch
+      --skipNEvents ${SKIP_N_EVENTS}
+      --hepmc3.useHepMC3 ${USEHEPMC3:-true}
+      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml
+      --inputFiles ${INPUT_FILE}
+    )
   else
-    npsim \
-      --runType run \
-      --random.seed ${SEED:-1} \
-      --random.enableEventSeed \
-      --printLevel WARNING \
-      --enableGun \
-      --steeringFile ${INPUT_FILE} \
-      --numberOfEvents ${EVENTS_PER_TASK} \
-      --filter.tracker 'edep0' \
-      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}.xml \
-      --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+    uncommon_flags=(
+      --runType run
+      --enableGun
+      --steeringFile ${INPUT_FILE}
+      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}.xml
+    )
+  fi
+  # Run npsim with both common and uncommon flags
+  npsim "${common_flags[@]}" "${uncommon_flags[@]}"
   ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root  
 } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.npsim.log | tail -n1000
 

@@ -43,12 +43,14 @@ export DETECTOR_VERSION=${DETECTOR_VERSION_REQUESTED}
 export DETECTOR_CONFIG=${DETECTOR_CONFIG_REQUESTED:-${DETECTOR_CONFIG:-$DETECTOR}}
 
 # Argument parsing
+# - input file extension
+EXTENSION=${1}
 # - input file
-INPUT_FILE=${1}
+INPUT_FILE_REQUESTED=${2}
 # - number of events
-EVENTS_PER_TASK=${2:-10000}
+EVENTS_PER_TASK=${3:-10000}
 # - current chunk (zero-based)
-if [ ${#} -lt 3 ] ; then
+if [ ${#} -lt 4 ] ; then
   TASK=""
   SEED=1
   SKIP_N_EVENTS=0
@@ -94,8 +96,8 @@ mkdir -p ${TMPDIR}
 ls -al ${TMPDIR}
 
 # Input file parsing
-EXTENSION=".hepmc3.tree.root"
-BASENAME=$(basename ${INPUT_FILE} ${EXTENSION})
+INPUT_FILE=${INPUT_FILE_REQUESTED}.${EXTENSION}
+BASENAME=${INPUT_FILE_REQUESTED}
 TASKNAME=${BASENAME}${TASK}
 INPUT_DIR=$(dirname $(realpath --canonicalize-missing --relative-to=${BASEDIR} ${INPUT_FILE}))
 # - file.hepmc              -> TAG="", and avoid double // in S3 location
@@ -113,8 +115,13 @@ INPUT_DIR=${BASEDIR}/EVGEN/${TAG}
 mkdir -p ${INPUT_DIR}
 TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${TAG}
 
-# Define location on xrootd from where to stream input file from
-INPUT_FILE=${XRDRURL}/${XRDRBASE}/${INPUT_FILE}
+if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+  # Define location on xrootd from where to stream input file from
+  INPUT_FILE=${XRDRURL}/${XRDRBASE}/${INPUT_FILE}
+else
+  # Copy input file from xrootd
+  xrdcp -f ${XRDRURL}/${XRDRBASE}/${INPUT_FILE} ${INPUT_DIR}
+fi
 
 # Output file names
 LOG_DIR=LOG/${TAG}
@@ -137,19 +144,32 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
     --filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt \
     --json-summary ${LOG_TEMP}/${TASKNAME}.npsim.prmon.json \
     -- \
-  npsim \
-    --runType batch \
-    --random.seed ${SEED:-1} \
-    --random.enableEventSeed \
-    --printLevel WARNING \
-    --skipNEvents ${SKIP_N_EVENTS} \
-    --numberOfEvents ${EVENTS_PER_TASK} \
-    --filter.tracker 'edep0' \
-    --hepmc3.useHepMC3 ${USEHEPMC3:-true} \
-    --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml \
-    --inputFiles ${INPUT_FILE} \
-    --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
-  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+  if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+    npsim \
+      --runType batch \
+      --random.seed ${SEED:-1} \
+      --random.enableEventSeed \
+      --printLevel WARNING \
+      --skipNEvents ${SKIP_N_EVENTS} \
+      --numberOfEvents ${EVENTS_PER_TASK} \
+      --filter.tracker 'edep0' \
+      --hepmc3.useHepMC3 ${USEHEPMC3:-true} \
+      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml \
+      --inputFiles ${INPUT_FILE} \
+      --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+  else
+    npsim \
+      --runType run \
+      --random.seed ${SEED:-1} \
+      --random.enableEventSeed \
+      --printLevel WARNING \
+      --enableGun \
+      --steeringFile ${INPUT_FILE} \
+      --numberOfEvents ${EVENTS_PER_TASK} \
+      --filter.tracker 'edep0' \
+      --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}.xml \
+      --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root  
 } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.npsim.log | tail -n1000
 
 # Data egress to directory

@@ -139,10 +139,6 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
 {
   date
   eic-info
-  prmon \
-    --filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt \
-    --json-summary ${LOG_TEMP}/${TASKNAME}.npsim.prmon.json \
-    -- \
   # Common flags shared by both types of simulation
   common_flags=(
     --random.seed ${SEED:-1}
@@ -170,6 +166,10 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
     )
   fi
   # Run npsim with both common and uncommon flags
+  prmon \
+    --filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt \
+    --json-summary ${LOG_TEMP}/${TASKNAME}.npsim.prmon.json \
+    -- \
   npsim "${common_flags[@]}" "${uncommon_flags[@]}"
   ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root  
 } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.npsim.log | tail -n1000

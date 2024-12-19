@@ -97,7 +97,7 @@ ls -al ${TMPDIR}
 
 # Input file parsing
 INPUT_FILE=${BASENAME}.${EXTENSION}
-TASKNAME=${BASENAME}${TASK}
+TASKNAME=$(basename ${BASENAME})${TASK}
 INPUT_DIR=$(dirname $(realpath --canonicalize-missing --relative-to=${BASEDIR} ${INPUT_FILE}))
 # - file.hepmc              -> TAG="", and avoid double // in S3 location
 # - EVGEN/file.hepmc        -> TAG="", and avoid double // in S3 location
@@ -125,15 +125,15 @@ fi
 # Output file names
 LOG_DIR=LOG/${TAG}
 LOG_TEMP=${TMPDIR}/${LOG_DIR}
-mkdir -p ${LOG_TEMP} ${BASEDIR}/${LOG_DIR}
+mkdir -p ${LOG_TEMP} 
 #
 FULL_DIR=FULL/${TAG}
 FULL_TEMP=${TMPDIR}/${FULL_DIR}
-mkdir -p ${FULL_TEMP} ${BASEDIR}/${FULL_DIR}
+mkdir -p ${FULL_TEMP} 
 #
 RECO_DIR=RECO/${TAG}
 RECO_TEMP=${TMPDIR}/${RECO_DIR}
-mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
+mkdir -p ${RECO_TEMP} 
 
 # Run simulation
 {

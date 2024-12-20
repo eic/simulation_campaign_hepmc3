@@ -21,8 +21,8 @@ uploads_items = [{
         'rse': rse,
         'did_scope': scope,
         'did_name': did_name,
-        'dataset_scope' = scope,
-        'dataset_name' = parent_directory
+        'dataset_scope': scope,
+        'dataset_name': parent_directory
 }]
 
 upload_client = UploadClient()

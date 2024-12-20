@@ -24,8 +24,12 @@ jobs:
       with:
         platform-release: "jug_xl:nightly"
         run: |
-          eic-info
-
+          eic-info > eic-info.txt
+          echo ${X509_PROXY} > x509_user_proxy
+          
+          # Test rucio upload script
+          X509_USER_PROXY=x509_user_proxy RUCIO_CONFIG=scripts/rucio.cfg python scripts/register_to_rucio.py -f eic-info.txt -d /main/CI/eic-info.txt -s epic
+          
           # Test running hepmc3 file
           DETECTOR_CONFIG="epic_craterlake" \
           DETECTOR_VERSION="main" \

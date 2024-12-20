@@ -27,7 +27,7 @@ jobs:
         platform-release: "jug_xl:nightly"
         run: |
           eic-info > eic-info.txt
-          echo ${X509_PROXY} > x509_user_proxy
+          echo "${X509_PROXY}" > x509_user_proxy
           
           # Test rucio upload script
           export X509_USER_PROXY=x509_user_proxy

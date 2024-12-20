@@ -30,7 +30,8 @@ jobs:
           echo ${X509_PROXY} > x509_user_proxy
           
           # Test rucio upload script
-          X509_USER_PROXY=x509_user_proxy RUCIO_CONFIG=scripts/rucio.cfg python scripts/register_to_rucio.py -f eic-info.txt -d /main/CI/eic-info.txt -s epic
+          export X509_USER_PROXY=x509_user_proxy
+          RUCIO_CONFIG=scripts/rucio.cfg python scripts/register_to_rucio.py -f eic-info.txt -d /main/CI/eic-info.txt -s epic
           
           # Test running hepmc3 file
           DETECTOR_CONFIG="epic_craterlake" \

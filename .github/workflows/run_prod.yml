@@ -21,17 +21,10 @@ jobs:
     - uses: actions/checkout@v3
     - uses: cvmfs-contrib/github-action-cvmfs@v3
     - uses: eic/run-cvmfs-osg-eic-shell@main
-      env:
-          X509_PROXY: ${{ secrets.X509_PROXY }} 
       with:
         platform-release: "jug_xl:nightly"
         run: |
-          eic-info > eic-info.txt
-          echo "${X509_PROXY}" > x509_user_proxy
-          
-          # Test rucio upload script
-          export X509_USER_PROXY=x509_user_proxy
-          RUCIO_CONFIG=scripts/rucio.cfg python scripts/register_to_rucio.py -f eic-info.txt -d /main/CI/eic-info.txt -s epic
+          eic-info
           
           # Test running hepmc3 file
           DETECTOR_CONFIG="epic_craterlake" \

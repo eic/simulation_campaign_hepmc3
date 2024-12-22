@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
       
 jobs:
-  build-and-run:
+  rucio-upload:
     # Note: this workflow must run on linux 
     runs-on: ubuntu-latest
     steps:

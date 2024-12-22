@@ -25,7 +25,7 @@ jobs:
         platform-release: "jug_xl:nightly"
         run: |
           eic-info
-
+          
           # Test running hepmc3 file
           DETECTOR_CONFIG="epic_craterlake" \
           DETECTOR_VERSION="main" \

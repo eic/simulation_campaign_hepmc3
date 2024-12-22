@@ -3,7 +3,6 @@ name: Test upload to rucio
 on:
   schedule:
     - cron: '0 0 1,15 * *'
-  pull_request:
   workflow_dispatch:
 
 concurrency:

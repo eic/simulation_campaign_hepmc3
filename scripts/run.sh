@@ -112,7 +112,7 @@ INPUT_PREFIX=${INPUT_DIR/\/*/}
 TAG=${INPUT_DIR/${INPUT_PREFIX}\//}
 INPUT_DIR=${BASEDIR}/EVGEN/${TAG}
 mkdir -p ${INPUT_DIR}
-TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${TAG}
+TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${MISC_CONFIG/:-}${TAG}
 
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   # Define location on xrootd from where to stream input file from

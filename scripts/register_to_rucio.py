@@ -4,7 +4,7 @@ import argparse
 import os
 from rucio.client.uploadclient import UploadClient
 from rucio.common.exception import InputValidationError, RSEWriteBlocked, NoFilesUploaded, NotAllFilesUploaded
-import logger
+import logging
 
 parser = argparse.ArgumentParser(prog='Register to RUCIO', description='Registers files to RUCIO')
 parser.add_argument("-f", dest="file_path", action="store", required=True, help="Enter the local file path")

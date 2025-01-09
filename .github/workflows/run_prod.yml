@@ -37,7 +37,8 @@ jobs:
           # Test running hepmc3 file
           DETECTOR_CONFIG="epic_craterlake" \
           DETECTOR_VERSION="main" \
-          MISC_CONFIG="CI/${timestamp}" \
+          TAG_PREFIX="CI/${timestamp}" \
+          TAG_SUFFIX="_CI_${timestamp}" \
           COPYRECO=true \
           COPYLOG=true \
           USERUCIO=true \
@@ -46,7 +47,8 @@ jobs:
           # Test running singles file
           DETECTOR_CONFIG="epic_craterlake" \
           DETECTOR_VERSION="main" \
-          MISC_CONFIG="CI/${timestamp}" \
+          TAG_PREFIX="CI/${timestamp}" \
+          TAG_SUFFIX="_CI_${timestamp}" \
           COPYRECO=true \
           COPYLOG=true \
           USERUCIO=true \

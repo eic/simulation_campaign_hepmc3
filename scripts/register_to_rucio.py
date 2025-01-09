@@ -29,6 +29,6 @@ uploads_items = [{
 
 logger = logging.getLogger('upload_client')
 logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 upload_client=UploadClient(logger=logger)
 upload_client.upload(uploads_items)

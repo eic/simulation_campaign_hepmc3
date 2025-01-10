@@ -219,7 +219,7 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
     python $(dirname $0)/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.tree.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.tree.edm4eic.root" -s epic
   else
     # Token for write authentication
-    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
+    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
     if [ -n ${XRDWURL} ] ; then
       xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR} || echo "Cannot write reconstructed outputs to xrootd server"
     else
@@ -230,7 +230,7 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
 fi
 if [ "${COPYLOG:-false}" == "true" ] ; then
   # Token for write authentication
-  export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
+  export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
   if [ -n ${XRDWURL} ] ; then
     xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR} || echo "Cannot write log outputs to xrootd server"
   else

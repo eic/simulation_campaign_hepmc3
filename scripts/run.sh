@@ -98,7 +98,7 @@ ls -al ${TMPDIR}
 
 # Input file parsing
 INPUT_FILE=${BASENAME}.${EXTENSION}
-TASKNAME=$(basename ${BASENAME})${TASK}
+TASKNAME=${TAG_SUFFIX:+/${TAG_SUFFIX}_}$(basename ${BASENAME})${TASK}
 INPUT_DIR=$(dirname $(realpath --canonicalize-missing --relative-to=${BASEDIR} ${INPUT_FILE}))
 # - file.hepmc              -> TAG="", and avoid double // in S3 location
 # - EVGEN/file.hepmc        -> TAG="", and avoid double // in S3 location
@@ -113,7 +113,7 @@ INPUT_PREFIX=${INPUT_DIR/\/*/}
 TAG=${INPUT_DIR/${INPUT_PREFIX}\//}
 INPUT_DIR=${BASEDIR}/EVGEN/${TAG}
 mkdir -p ${INPUT_DIR}
-TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${TAG_PREFIX:+${TAG_PREFIX}/}${TAG}${TAG_SUFFIX:+/${TAG_SUFFIX}_}
+TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${TAG_PREFIX:+${TAG_PREFIX}/}${TAG}
 
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   # Define location on xrootd from where to stream input file from

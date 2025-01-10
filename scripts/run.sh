@@ -98,7 +98,7 @@ ls -al ${TMPDIR}
 
 # Input file parsing
 INPUT_FILE=${BASENAME}.${EXTENSION}
-TASKNAME=${TAG_SUFFIX:+/${TAG_SUFFIX}_}$(basename ${BASENAME})${TASK}
+TASKNAME=${TAG_SUFFIX:+${TAG_SUFFIX}_}$(basename ${BASENAME})${TASK}
 INPUT_DIR=$(dirname $(realpath --canonicalize-missing --relative-to=${BASEDIR} ${INPUT_FILE}))
 # - file.hepmc              -> TAG="", and avoid double // in S3 location
 # - EVGEN/file.hepmc        -> TAG="", and avoid double // in S3 location

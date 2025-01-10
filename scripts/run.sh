@@ -41,7 +41,7 @@ export DETECTOR_VERSION_REQUESTED=${DETECTOR_VERSION:-main}
 source /opt/detector/epic-${DETECTOR_VERSION_REQUESTED}/bin/thisepic.sh
 export DETECTOR_VERSION=${DETECTOR_VERSION_REQUESTED}
 export DETECTOR_CONFIG=${DETECTOR_CONFIG_REQUESTED:-${DETECTOR_CONFIG:-$DETECTOR}}
-export RUCIO_CONFIG=/opt/campaigns/hepmc3/scripts/rucio.cfg
+export RUCIO_CONFIG=$(dirname $0)/rucio.cfg
 
 # Argument parsing
 # - input file basename
@@ -179,7 +179,7 @@ mkdir -p ${RECO_TEMP}
 # Data egress to directory
 if [ "${COPYFULL:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python /opt/campaigns/hepmc3/scripts/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic
+    python $(dirname $0)/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
@@ -216,7 +216,7 @@ ls -al ${LOG_TEMP}/${TASKNAME}.*
 # Data egress to directory
 if [ "${COPYRECO:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python /opt/campaigns/hepmc3/scripts/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.tree.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.tree.edm4eic.root" -s epic
+    python $(dirname $0)/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.tree.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.tree.edm4eic.root" -s epic
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)

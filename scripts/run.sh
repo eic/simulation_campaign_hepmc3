@@ -182,7 +182,7 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
     python $(dirname $0)/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic
   else
     # Token for write authentication
-    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS}/eic.use)
+    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
     if [ -n ${XRDWURL} ] ; then
       xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR} || echo "Cannot write simulation outputs to xrootd server"
     else

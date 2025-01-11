@@ -24,7 +24,7 @@ jobs:
       env:
           X509_PROXY: ${{ secrets.X509_PROXY }} 
       with:
-        platform-release: "jug_xl:nightly"
+        platform-release: "eic_xl:nightly"
         run: |
           eic-info
           # Generate a timestamp

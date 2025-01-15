@@ -202,10 +202,10 @@ ls -al ${LOG_TEMP}/${TASKNAME}.*
 
 if [ "${COPYLOG:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt" -d "/${LOG_DIR}/${TASKNAME}.npsim.prmon.txt" -s epic -r EIC-CLOUD-LOG
-    python $SCRIPT_DIR/register_to_rucio.py -f "${LOG_TEMP}/${TASKNAME}.npsim.log" -d "/${LOG_DIR}/${TASKNAME}.npsim.log" -s epic -r EIC-CLOUD-LOG
-    python $SCRIPT_DIR/register_to_rucio.py -f "${LOG_TEMP}/${TASKNAME}.eicrecon.prmon.txt" -d "/${LOG_DIR}/${TASKNAME}.eicrecon.prmon.txt" -s epic -r EIC-CLOUD-LOG
-    python $SCRIPT_DIR/register_to_rucio.py -f "${LOG_TEMP}/${TASKNAME}.eicrecon.log" -d "/${LOG_DIR}/${TASKNAME}.eicrecon.log" -s epic -r EIC-CLOUD-LOG
+    python $SCRIPT_DIR/register_to_rucio.py \
+    -f "${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt" "${LOG_TEMP}/${TASKNAME}.npsim.log" "${LOG_TEMP}/${TASKNAME}.eicrecon.prmon.txt" "${LOG_TEMP}/${TASKNAME}.eicrecon.log" "${LOG_TEMP}/${TASKNAME}.eicrecon.dot" \
+    -d "/${LOG_DIR}/${TASKNAME}.npsim.prmon.txt" "/${LOG_DIR}/${TASKNAME}.npsim.log" "/${LOG_DIR}/${TASKNAME}.eicrecon.prmon.txt" "/${LOG_DIR}/${TASKNAME}.eicrecon.log" "/${LOG_DIR}/${TASKNAME}.eicrecon.dot" \
+    -s epic -r EIC-CLOUD-LOG
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)

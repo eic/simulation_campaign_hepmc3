@@ -16,18 +16,13 @@ args=parser.parse_args()
 
 file_paths = args.file_paths
 did_names = args.did_names
-parent_directory = os.path.dirname(did_name)
 scope= args.scope
 rse= args.rse   
-
-print("The file paths to be added are: "+str(file_paths))
-print("The did names to be added are: "+str(did_names))
 
 upload_items = []  # List to hold the upload items
 
 # Loop through the file paths and did names (assuming did_names length matches file_paths length)
 for file_path, did_name in zip(file_paths, did_names):
-    print("The file path and did name is: "+str(file_path)+" and "+str(did_name)")
     parent_directory = os.path.dirname(did_name)  # Get the parent directory from did_name
 
     # Create a new dictionary for each file and did_name

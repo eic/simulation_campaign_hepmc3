@@ -19,6 +19,10 @@ did_names = args.did_names
 scope= args.scope
 rse= args.rse   
 
+# Validation to ensure file_paths and did_names have the same length
+if len(file_paths) != len(did_names):
+    raise ValueError("The number of file paths must match the number of did names.")
+
 upload_items = []  # List to hold the upload items
 
 # Loop through the file paths and did names (assuming did_names length matches file_paths length)

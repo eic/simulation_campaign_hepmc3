@@ -186,7 +186,7 @@ mkdir -p ${RECO_TEMP}
     --log-filename ${LOG_TEMP}/${TASKNAME}.eicrecon.prmon.log \
     -- \
   eicrecon \
-    -Pdd4hep:xml_files="${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml"
+    -Pdd4hep:xml_files="${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml" \
     -Ppodio:output_file="${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" \
     -Pjana:warmup_timeout=0 -Pjana:timeout=0 \
     -Pplugins=janadot \

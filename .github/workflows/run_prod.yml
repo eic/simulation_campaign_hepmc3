@@ -29,7 +29,8 @@ jobs:
           eic-info
           # Generate a timestamp
           timestamp=$(date --iso-8601=second | tr -d '\n')
-
+          echo ${timestamp}
+          
           # Set certificate
           echo "${X509_PROXY}" > x509_user_proxy
           export X509_USER_PROXY=x509_user_proxy

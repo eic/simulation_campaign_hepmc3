@@ -18,7 +18,8 @@ args=parser.parse_args()
 file_paths = args.file_paths
 did_names = args.did_names
 scope= args.scope
-rse= args.rse   
+rse= args.rse
+noregister = args.noregister 
 
 # Validation to ensure file_paths and did_names have the same length
 if len(file_paths) != len(did_names):

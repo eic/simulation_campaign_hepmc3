@@ -151,6 +151,9 @@ mkdir -p ${RECO_TEMP} ${BASEDIR}/${RECO_DIR}
     --bg3Freq ${BG3_FREQ:-""} \
     --bg3File ${BG3_FILE:-""} \
     --bg3Skip ${BG3_SKIP:-0} \
+    --bg4Freq ${BG4_FREQ:-""} \
+    --bg4File ${BG4_FILE:-""} \
+    --bg4Skip ${BG4_SKIP:-0} \
     --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
   # Use background merged file as input for next stage

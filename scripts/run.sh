@@ -119,39 +119,6 @@ TAG=${DETECTOR_VERSION:-main}/${DETECTOR_CONFIG}/${TAG_PREFIX:+${TAG_PREFIX}/}${
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   # Define location on xrootd from where to stream input file from
   INPUT_FILE=${XRDRURL}/${XRDRBASE}/${INPUT_FILE}
-
-  # Mix background events
-  {
-    date
-    eic-info
-    prmon \
-      --filename ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.txt \
-      --json-summary ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.json \
-      -- \
-    SignalBackgroundMerger \
-      --rngSeed ${SEED:-1} \
-      --nSlices ${EVENTS_PER_TASK} \
-      --signalSkip ${SKIP_N_EVENTS} \
-      --signalFile ${INPUT_FILE} \
-      --bg1Freq ${BG1_FREQ:-""} \
-      --bg1File ${BG1_FILE:-""} \
-      --bg1Skip ${BG1_SKIP:-0} \
-      --bg2Freq ${BG2_FREQ:-""} \
-      --bg2File ${BG2_FILE:-""} \
-      --bg2Skip ${BG2_SKIP:-0} \
-      --bg3Freq ${BG3_FREQ:-""} \
-      --bg3File ${BG3_FILE:-""} \
-      --bg3Skip ${BG3_SKIP:-0} \
-      --bg4Freq ${BG4_FREQ:-""} \
-      --bg4File ${BG4_FILE:-""} \
-      --bg4Skip ${BG4_SKIP:-0} \
-      --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
-
-    # Use background merged file as input for next stage
-    INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
-    # Don't skip events on the background merged file
-    SKIP_N_EVENTS=0
-  } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.hepmcmerger.log | tail -n1000
 else
   # Copy input file from xrootd
   xrdcp -f ${XRDRURL}/${XRDRBASE}/${INPUT_FILE} ${INPUT_DIR}

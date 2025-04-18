@@ -240,12 +240,32 @@ ls -al ${LOG_TEMP}/${TASKNAME}.*
 if [ "${COPYLOG:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
     TIME_TAG=$(date --iso-8601=second)
-    tar -czvf ${LOG_TEMP}/${TASKNAME}.log.tar.gz \
-    ${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt \
-    ${LOG_TEMP}/${TASKNAME}.npsim.log \
-    ${LOG_TEMP}/${TASKNAME}.eicrecon.prmon.txt \
-    ${LOG_TEMP}/${TASKNAME}.eicrecon.log \
-    ${LOG_TEMP}/${TASKNAME}.eicrecon.dot
+    TARFILE="${LOG_TEMP}/${TASKNAME}.log.tar.gz"
+
+    # Initialize an empty array to hold existing files
+    FILES_TO_TAR=()
+
+    # List of expected files
+    for FILE in \
+      "${LOG_TEMP}/${TASKNAME}.npsim.prmon.txt" \
+      "${LOG_TEMP}/${TASKNAME}.npsim.log" \
+      "${LOG_TEMP}/${TASKNAME}.eicrecon.prmon.txt" \
+      "${LOG_TEMP}/${TASKNAME}.eicrecon.log" \
+      "${LOG_TEMP}/${TASKNAME}.eicrecon.dot" \
+      "${LOG_TEMP}/${TASKNAME}.hepmcmerger.log"
+    do
+      if [ -f "$FILE" ]; then
+        FILES_TO_TAR+=("$FILE")
+      fi
+    done
+
+    # Create the tar archive only if there are files to include
+    if [ ${#FILES_TO_TAR[@]} -gt 0 ]; then
+      tar -czvf "$TARFILE" "${FILES_TO_TAR[@]}"
+    else
+      echo "No log files found to archive."
+    fi
+    
     python $SCRIPT_DIR/register_to_rucio.py \
     -f "${LOG_TEMP}/${TASKNAME}.log.tar.gz" \
     -d "/${LOG_DIR}/${TASKNAME}.${TIME_TAG}.log.tar.gz" \

@@ -141,10 +141,10 @@ mkdir -p ${RECO_TEMP}
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   {
   
-    BG1_SKIP=$((${SKIP_N_EVENTS}*${BG1_SKIP:-}))
-    BG2_SKIP=$((${SKIP_N_EVENTS}*${BG2_SKIP:-}))
-    BG3_SKIP=$((${SKIP_N_EVENTS}*${BG3_SKIP:-}))
-    BG4_SKIP=$((${SKIP_N_EVENTS}*${BG4_SKIP:-}))
+    BG1_SKIP=$((${SKIP_N_EVENTS}*${BG1_SKIP:-0}))
+    BG2_SKIP=$((${SKIP_N_EVENTS}*${BG2_SKIP:-0}))
+    BG3_SKIP=$((${SKIP_N_EVENTS}*${BG3_SKIP:-0}))
+    BG4_SKIP=$((${SKIP_N_EVENTS}*${BG4_SKIP:-0}))
     
     date
     eic-info

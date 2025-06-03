@@ -140,10 +140,15 @@ mkdir -p ${RECO_TEMP}
 # Mix background events if the input file is a hepmc file
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   {
-    BG1_SKIP=$((10#${4}*${BG1_SKIP:-0}))
-    BG2_SKIP=$((10#${4}*${BG2_SKIP:-0}))
-    BG3_SKIP=$((10#${4}*${BG3_SKIP:-0}))
-    BG4_SKIP=$((10#${4}*${BG4_SKIP:-0}))
+    BG1_SKIP=${BG1_SKIP:-0}
+    BG2_SKIP=${BG2_SKIP:-0}
+    BG3_SKIP=${BG3_SKIP:-0}
+    BG4_SKIP=${BG4_SKIP:-0}
+  
+    BG1_SKIP=$((10#${4}*${BG1_SKIP}))
+    BG2_SKIP=$((10#${4}*${BG2_SKIP}))
+    BG3_SKIP=$((10#${4}*${BG3_SKIP}))
+    BG4_SKIP=$((10#${4}*${BG4_SKIP}))
     
     date
     eic-info

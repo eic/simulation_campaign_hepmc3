@@ -205,8 +205,8 @@ fi
       --runType batch
       --skipNEvents ${SKIP_N_EVENTS}
       --hepmc3.useHepMC3 ${USEHEPMC3:-true}
-      --physics.alternativeStableStatuses {$((${SIGNAL_STATUS:-0}+1)), $((${BG1_STATUS:-0}+1)), $((${BG2_STATUS:-0}+1)), $((${BG3_STATUS:-0}+1)), $((${BG4_STATUS:-0}+1))}
-      --physics.alternativeDecayStatuses {$((${SIGNAL_STATUS:-0}+2)), $((${BG1_STATUS:-0}+2)), $((${BG2_STATUS:-0}+2)), $((${BG3_STATUS:-0}+2)), $((${BG4_STATUS:-0}+2))}
+      --physics.alternativeStableStatuses=[$((${SIGNAL_STATUS:-0}+1)), $((${BG1_STATUS:-0}+1)), $((${BG2_STATUS:-0}+1)), $((${BG3_STATUS:-0}+1)), $((${BG4_STATUS:-0}+1))]
+      --physics.alternativeDecayStatuses=[{$((${SIGNAL_STATUS:-0}+2)), $((${BG1_STATUS:-0}+2)), $((${BG2_STATUS:-0}+2)), $((${BG3_STATUS:-0}+2)), $((${BG4_STATUS:-0}+2))}]
       --inputFiles ${INPUT_FILE}
     )
   else

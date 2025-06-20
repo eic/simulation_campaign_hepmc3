@@ -157,18 +157,23 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       --nSlices ${EVENTS_PER_TASK} \
       --signalSkip ${SKIP_N_EVENTS} \
       --signalFile ${INPUT_FILE} \
+      --signalStatus ${SIGNAL_STATUS:-0} \
       --bg1Freq ${BG1_FREQ:-""} \
       --bg1File ${BG1_FILE:-""} \
       --bg1Skip ${BG1_SKIP:-0} \
+      --bg1Status ${BG1_STATUS:-0} \
       --bg2Freq ${BG2_FREQ:-""} \
       --bg2File ${BG2_FILE:-""} \
       --bg2Skip ${BG2_SKIP:-0} \
+      --bg2Status ${BG2_STATUS:-0} \
       --bg3Freq ${BG3_FREQ:-""} \
       --bg3File ${BG3_FILE:-""} \
       --bg3Skip ${BG3_SKIP:-0} \
+      --bg3Status ${BG3_STATUS:-0} \
       --bg4Freq ${BG4_FREQ:-""} \
       --bg4File ${BG4_FILE:-""} \
       --bg4Skip ${BG4_SKIP:-0} \
+      --bg4Status ${BG4_STATUS:-0} \
       --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
     # Use background merged file as input for next stage
@@ -200,6 +205,8 @@ fi
       --runType batch
       --skipNEvents ${SKIP_N_EVENTS}
       --hepmc3.useHepMC3 ${USEHEPMC3:-true}
+      --physics.alternativeStableStatuses "$((${SIGNAL_STATUS:-0}+1)) $((${BG1_STATUS:-0}+1)) $((${BG2_STATUS:-0}+1)) $((${BG3_STATUS:-0}+1)) $((${BG4_STATUS:-0}+1))"
+      --physics.alternativeDecayStatuses "$((${SIGNAL_STATUS:-0}+2)) $((${BG1_STATUS:-0}+2)) $((${BG2_STATUS:-0}+2)) $((${BG3_STATUS:-0}+2)) $((${BG4_STATUS:-0}+2))"
       --inputFiles ${INPUT_FILE}
     )
   else

@@ -140,11 +140,16 @@ mkdir -p ${RECO_TEMP}
 # Mix background events if the input file is a hepmc file
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   {
-  
-    BG1_SKIP=$((${SKIP_N_EVENTS}*${BG1_SKIP:-0}))
-    BG2_SKIP=$((${SKIP_N_EVENTS}*${BG2_SKIP:-0}))
-    BG3_SKIP=$((${SKIP_N_EVENTS}*${BG3_SKIP:-0}))
-    BG4_SKIP=$((${SKIP_N_EVENTS}*${BG4_SKIP:-0}))
+    BG_ARGS=""
+
+    while read -r bg_file; do
+      file=$(echo "$bg_file" | jq -r '.file')
+      freq=$(echo "$bg_file" | jq -r '.freq')
+      skip=$(echo "$bg_file" | jq -r '.skip')
+      skip=$((${SKIP_N_EVENTS}*${skip}))
+      status=$(echo "$bg_file" | jq -r '.status')
+      BG_ARGS="${BG_ARGS} --bgFile $file $freq $skip $status"
+    done < <(jq -c '.[]' $BG_FILES)
     
     date
     eic-info
@@ -158,22 +163,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       --signalSkip ${SKIP_N_EVENTS} \
       --signalFile ${INPUT_FILE} \
       --signalStatus ${SIGNAL_STATUS:-0} \
-      --bg1Freq ${BG1_FREQ:-""} \
-      --bg1File ${BG1_FILE:-""} \
-      --bg1Skip ${BG1_SKIP:-0} \
-      --bg1Status ${BG1_STATUS:-0} \
-      --bg2Freq ${BG2_FREQ:-""} \
-      --bg2File ${BG2_FILE:-""} \
-      --bg2Skip ${BG2_SKIP:-0} \
-      --bg2Status ${BG2_STATUS:-0} \
-      --bg3Freq ${BG3_FREQ:-""} \
-      --bg3File ${BG3_FILE:-""} \
-      --bg3Skip ${BG3_SKIP:-0} \
-      --bg3Status ${BG3_STATUS:-0} \
-      --bg4Freq ${BG4_FREQ:-""} \
-      --bg4File ${BG4_FILE:-""} \
-      --bg4Skip ${BG4_SKIP:-0} \
-      --bg4Status ${BG4_STATUS:-0} \
+      $BG_ARGS \
       --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
     # Use background merged file as input for next stage

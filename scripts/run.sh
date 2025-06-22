@@ -142,6 +142,9 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   {
     BG_ARGS=""
 
+    STABLE_STATUSES="$((${SIGNAL_STATUS:-0}+1))"
+    DECAY_STATUSES="$((${SIGNAL_STATUS:-0}+2))"
+
     while read -r bg_file; do
       file=$(echo "$bg_file" | jq -r '.file')
       freq=$(echo "$bg_file" | jq -r '.freq')
@@ -149,6 +152,8 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       skip=$((${SKIP_N_EVENTS}*${skip}))
       status=$(echo "$bg_file" | jq -r '.status')
       BG_ARGS="${BG_ARGS} --bgFile $file $freq $skip $status"
+      STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
+      DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
     done < <(jq -c '.[]' $BG_FILES)
     
     date
@@ -195,8 +200,8 @@ fi
       --runType batch
       --skipNEvents ${SKIP_N_EVENTS}
       --hepmc3.useHepMC3 ${USEHEPMC3:-true}
-      --physics.alternativeStableStatuses "$((${SIGNAL_STATUS:-0}+1)) $((${BG1_STATUS:-0}+1)) $((${BG2_STATUS:-0}+1)) $((${BG3_STATUS:-0}+1)) $((${BG4_STATUS:-0}+1))"
-      --physics.alternativeDecayStatuses "$((${SIGNAL_STATUS:-0}+2)) $((${BG1_STATUS:-0}+2)) $((${BG2_STATUS:-0}+2)) $((${BG3_STATUS:-0}+2)) $((${BG4_STATUS:-0}+2))"
+      --physics.alternativeStableStatuses "${STABLE_STATUSES}"
+      --physics.alternativeDecayStatuses "${DECAY_STATUSES}"
       --inputFiles ${INPUT_FILE}
     )
   else

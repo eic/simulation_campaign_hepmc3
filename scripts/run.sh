@@ -143,8 +143,8 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
     BG_ARGS=""
 
     SIGNAL_STATUS_VALUE=${SIGNAL_STATUS:-0}
-    STABLE_STATUSES=$((${SIGNAL_STATUS_VALUE}+1))
-    DECAY_STATUSES=$((${SIGNAL_STATUS_VALUE}+2))
+    STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
+    DECAY_STATUSES="$((${SIGNAL_STATUS_VALUE}+2))"
 
     if [[ -n "${BG_FILES:-}" ]]; then
       while read -r bg_file; do

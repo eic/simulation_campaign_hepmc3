@@ -139,13 +139,31 @@ mkdir -p ${RECO_TEMP}
 
 # Mix background events if the input file is a hepmc file
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+  BG_ARGS=()  
+
+  SIGNAL_STATUS_VALUE=${SIGNAL_STATUS:-0}
+  STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
+  DECAY_STATUSES="$((${SIGNAL_STATUS_VALUE}+2))"
+
+  if [[ -n "${BG_FILES:-}" ]]; then
+    while read -r bg_file; do
+      file=$(echo "$bg_file" | jq -r '.file')
+      freq=$(echo "$bg_file" | jq -r '.freq')
+      skip=$(echo "$bg_file" | jq -r '.skip')
+      
+      # This ensures that the number of background events skipped before sampling from the source is atleast 1.
+      skip=$(awk "BEGIN {print int((${SKIP_N_EVENTS}*${skip})+1)}")  
+      status=$(echo "$bg_file" | jq -r '.status')
+      BG_ARGS+=(--bgFile "$file" "$freq" "$skip" "$status")
+      STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
+      DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
+    done < <(jq -c '.[]' ${BG_FILES})
+  else
+    echo "No background mixing will be performed since no sources are provided"
+  fi
+
+  # Run the background merger with proper logging
   {
-  
-    BG1_SKIP=$((${SKIP_N_EVENTS}*${BG1_SKIP:-0}))
-    BG2_SKIP=$((${SKIP_N_EVENTS}*${BG2_SKIP:-0}))
-    BG3_SKIP=$((${SKIP_N_EVENTS}*${BG3_SKIP:-0}))
-    BG4_SKIP=$((${SKIP_N_EVENTS}*${BG4_SKIP:-0}))
-    
     date
     eic-info
     prmon \
@@ -157,23 +175,9 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       --nSlices ${EVENTS_PER_TASK} \
       --signalSkip ${SKIP_N_EVENTS} \
       --signalFile ${INPUT_FILE} \
+      --signalFreq ${SIGNAL_FREQ:-0} \
       --signalStatus ${SIGNAL_STATUS:-0} \
-      --bg1Freq ${BG1_FREQ:-""} \
-      --bg1File ${BG1_FILE:-""} \
-      --bg1Skip ${BG1_SKIP:-0} \
-      --bg1Status ${BG1_STATUS:-0} \
-      --bg2Freq ${BG2_FREQ:-""} \
-      --bg2File ${BG2_FILE:-""} \
-      --bg2Skip ${BG2_SKIP:-0} \
-      --bg2Status ${BG2_STATUS:-0} \
-      --bg3Freq ${BG3_FREQ:-""} \
-      --bg3File ${BG3_FILE:-""} \
-      --bg3Skip ${BG3_SKIP:-0} \
-      --bg3Status ${BG3_STATUS:-0} \
-      --bg4Freq ${BG4_FREQ:-""} \
-      --bg4File ${BG4_FILE:-""} \
-      --bg4Skip ${BG4_SKIP:-0} \
-      --bg4Status ${BG4_STATUS:-0} \
+      "${BG_ARGS[@]}" \
       --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
     # Use background merged file as input for next stage
@@ -205,8 +209,8 @@ fi
       --runType batch
       --skipNEvents ${SKIP_N_EVENTS}
       --hepmc3.useHepMC3 ${USEHEPMC3:-true}
-      --physics.alternativeStableStatuses "$((${SIGNAL_STATUS:-0}+1)) $((${BG1_STATUS:-0}+1)) $((${BG2_STATUS:-0}+1)) $((${BG3_STATUS:-0}+1)) $((${BG4_STATUS:-0}+1))"
-      --physics.alternativeDecayStatuses "$((${SIGNAL_STATUS:-0}+2)) $((${BG1_STATUS:-0}+2)) $((${BG2_STATUS:-0}+2)) $((${BG3_STATUS:-0}+2)) $((${BG4_STATUS:-0}+2))"
+      --physics.alternativeStableStatuses "${STABLE_STATUSES}"
+      --physics.alternativeDecayStatuses "${DECAY_STATUSES}"
       --inputFiles ${INPUT_FILE}
     )
   else

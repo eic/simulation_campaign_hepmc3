@@ -139,28 +139,29 @@ mkdir -p ${RECO_TEMP}
 
 # Mix background events if the input file is a hepmc file
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+  BG_ARGS=""
+
+  SIGNAL_STATUS_VALUE=${SIGNAL_STATUS:-0}
+  STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
+  DECAY_STATUSES="$((${SIGNAL_STATUS_VALUE}+2))"
+
+  if [[ -n "${BG_FILES:-}" ]]; then
+    while read -r bg_file; do
+      file=$(echo "$bg_file" | jq -r '.file')
+      freq=$(echo "$bg_file" | jq -r '.freq')
+      skip=$(echo "$bg_file" | jq -r '.skip')
+      skip=$((${SKIP_N_EVENTS}*${skip}))
+      status=$(echo "$bg_file" | jq -r '.status')
+      BG_ARGS="${BG_ARGS} --bgFile $file $freq $skip $status"
+      STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
+      DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
+    done < <(jq -c '.[]' ${BG_FILES})
+  else
+    echo "No background mixing will be performed since no sources are provided"
+  fi
+
+  # Run the background merger with proper logging
   {
-    BG_ARGS=""
-
-    SIGNAL_STATUS_VALUE=${SIGNAL_STATUS:-0}
-    STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
-    DECAY_STATUSES="$((${SIGNAL_STATUS_VALUE}+2))"
-
-    if [[ -n "${BG_FILES:-}" ]]; then
-      while read -r bg_file; do
-        file=$(echo "$bg_file" | jq -r '.file')
-        freq=$(echo "$bg_file" | jq -r '.freq')
-        skip=$(echo "$bg_file" | jq -r '.skip')
-        skip=$((${SKIP_N_EVENTS}*${skip}))
-        status=$(echo "$bg_file" | jq -r '.status')
-        BG_ARGS="${BG_ARGS} --bgFile $file $freq $skip $status"
-        STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
-        DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
-      done < <(jq -c '.[]' ${BG_FILES})
-    else
-      echo "No background mixing will be performed since no sources are provided"
-    fi
-    
     date
     eic-info
     prmon \

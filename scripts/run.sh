@@ -173,6 +173,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       --nSlices ${EVENTS_PER_TASK} \
       --signalSkip ${SKIP_N_EVENTS} \
       --signalFile ${INPUT_FILE} \
+      --signalFreq ${SIGNAL_FREQ:-0} \
       --signalStatus ${SIGNAL_STATUS:-0} \
       $BG_ARGS \
       --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root

@@ -150,7 +150,9 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       file=$(echo "$bg_file" | jq -r '.file')
       freq=$(echo "$bg_file" | jq -r '.freq')
       skip=$(echo "$bg_file" | jq -r '.skip')
-      skip=$(awk "BEGIN {print int((${SKIP_N_EVENTS}*${skip})+0.999)}")
+      
+      # This ensures that the number of background events skipped before sampling from the source is atleast 1.
+      skip=$(awk "BEGIN {print int((${SKIP_N_EVENTS}*${skip})+1)}")  
       status=$(echo "$bg_file" | jq -r '.status')
       BG_ARGS+=(--bgFile "$file" "$freq" "$skip" "$status")
       STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"

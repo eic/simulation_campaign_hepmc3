@@ -205,6 +205,8 @@ fi
   )
   # Uncommon flags based on EXTENSION
   if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+    echo "The following stable status codes will be propagated ${STABLE_STATUSES}"
+    echo "The follow decay status codes will be propagaded ${DECAY_STATUSES}"
     uncommon_flags=(
       --runType batch
       --skipNEvents ${SKIP_N_EVENTS}

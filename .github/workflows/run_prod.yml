@@ -46,7 +46,8 @@ jobs:
           USERUCIO=true \
           scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
           root -l -b -q -e 'TChain *T=new TChain("hepmc3_tree"); int n=T->Add("*hepmc3.tree.root"); T->Scan("particles.status"); std::cout<< n << " merged hepmc3.tree.root file(s) were used" << std::endl;'
-          
+          cat $INPUT_DIR
+          ls $INPUR_DIR
 
           # Test running hepmc3 mixed with backgrounds
           curl -L -o bg_files.json "https://eicweb.phy.anl.gov/EIC/campaigns/datasets/-/raw/main/config_data/synrad_egasbrems_egascoulomb_egastouschek_hgas_18GeVx275GeV_vacuum_10000Ahr_machineruntime_10ms.json"

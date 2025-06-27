@@ -56,11 +56,11 @@ jobs:
           TTree* t=(TTree*)f.Get(\"hepmc3_tree\"); 
           if(!t) { cout << \"Tree not found in $1\" << endl; return; }
           std::set<int> unique_vals; 
-          std::vector<int>* val = nullptr; 
+          int val = 0; 
           t->SetBranchAddress(\"particles.status\", &val); 
           for(Long64_t i=0; i<t->GetEntries(); i++) { 
             t->GetEntry(i); 
-            if(val) for(auto v : *val) unique_vals.insert(v); 
+            if(val) unique_vals.insert(val); 
           } 
           cout << \"Unique values in $1:\" << endl;
           for(auto v : unique_vals) cout << v << endl;

@@ -180,11 +180,12 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       "${BG_ARGS[@]}" \
       --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 
-    # Use background merged file as input for next stage
-    INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
-    # Don't skip events on the background merged file
-    SKIP_N_EVENTS=0
   } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.hepmcmerger.log | tail -n1000
+
+  # Use background merged file as input for next stage
+  INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
+  # Don't skip events on the background merged file
+  SKIP_N_EVENTS=0
 else
   echo "No background mixing is performed for singles"
 fi

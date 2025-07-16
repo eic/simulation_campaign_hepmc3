@@ -4,9 +4,9 @@ trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 IFS=$'\n\t'
 
 # Load job environment (mask secrets)
-if ls environment*.sh ; then
-  grep -v BEARER environment*.sh
-  source environment*.sh
+if ls environment-${CSV_BASE}.sh ; then
+  grep -v BEARER environment-${CSV_BASE}.sh
+  source environment-${CSV_BASE}.sh
 fi
 
 # Check arguments

@@ -44,6 +44,9 @@ export DETECTOR_CONFIG=${DETECTOR_CONFIG_REQUESTED:-${DETECTOR_CONFIG:-$DETECTOR
 export SCRIPT_DIR=$(realpath $(dirname $0))
 export RUCIO_CONFIG=$SCRIPT_DIR/rucio.cfg
 
+# Print out the location of the rucio config file
+echo $RUCIO_CONFIG
+
 # Argument parsing
 # - input file basename
 BASENAME=${1}

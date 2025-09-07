@@ -162,34 +162,33 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
       DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
     done < <(jq -c '.[]' ${BG_FILES})
+    # Run the background merger with proper logging
+    {
+      date
+      eic-info
+      prmon \
+        --filename ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.txt \
+        --json-summary ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.json \
+        -- \
+      SignalBackgroundMerger \
+        --rngSeed ${SEED:-1} \
+        --nSlices ${EVENTS_PER_TASK} \
+        --signalSkip ${SKIP_N_EVENTS} \
+        --signalFile ${INPUT_FILE} \
+        --signalFreq ${SIGNAL_FREQ:-0} \
+        --signalStatus ${SIGNAL_STATUS:-0} \
+        "${BG_ARGS[@]}" \
+        --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
+
+    } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.hepmcmerger.log | tail -n1000
+
+    # Use background merged file as input for next stage
+    INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
+    # Don't skip events on the background merged file
+    SKIP_N_EVENTS=0
   else
     echo "No background mixing will be performed since no sources are provided"
   fi
-
-  # Run the background merger with proper logging
-  {
-    date
-    eic-info
-    prmon \
-      --filename ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.txt \
-      --json-summary ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.json \
-      -- \
-    SignalBackgroundMerger \
-      --rngSeed ${SEED:-1} \
-      --nSlices ${EVENTS_PER_TASK} \
-      --signalSkip ${SKIP_N_EVENTS} \
-      --signalFile ${INPUT_FILE} \
-      --signalFreq ${SIGNAL_FREQ:-0} \
-      --signalStatus ${SIGNAL_STATUS:-0} \
-      "${BG_ARGS[@]}" \
-      --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
-
-  } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.hepmcmerger.log | tail -n1000
-
-  # Use background merged file as input for next stage
-  INPUT_FILE=${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
-  # Don't skip events on the background merged file
-  SKIP_N_EVENTS=0
 else
   echo "No background mixing is performed for singles"
 fi

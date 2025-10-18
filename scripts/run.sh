@@ -290,7 +290,7 @@ if [ "${COPYLOG:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py \
     -f "${LOG_TEMP}/${TASKNAME}.log.tar.gz" \
     -d "/${LOG_DIR}/${TASKNAME}.${TIME_TAG}.log.tar.gz" \
-    -s epic -r EIC-XRD-LOG -noregister
+    -s epic -r ${LOG_RSE:-EIC-XRD-LOG} -noregister
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
@@ -305,7 +305,7 @@ fi
 
 if [ "${COPYFULL:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r EIC-XRD
+    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
@@ -320,7 +320,7 @@ fi
 
 if [ "${COPYRECO:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r EIC-XRD
+    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else
     # Token for write authentication
     export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)

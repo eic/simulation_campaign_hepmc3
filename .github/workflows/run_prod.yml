@@ -44,13 +44,14 @@ jobs:
           COPYRECO=true \
           COPYLOG=true \
           USERUCIO=false \
-          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
           # XRDRURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
-          # XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
+          XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
           # XRDRBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
-          # XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
+          XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
           # LOG_RSE=BNL-XRD \
           # OUT_RSE=BNL-XRD \
+          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
+          
 
           # Test running hepmc3 mixed with backgrounds
           curl -L -o bg_files.json "https://eicweb.phy.anl.gov/EIC/campaigns/datasets/-/raw/main/config_data/synrad_egasbrems_egascoulomb_egastouschek_hgas_18GeVx275GeV_vacuum_10000Ahr_machineruntime_50s.json"
@@ -64,13 +65,13 @@ jobs:
           COPYLOG=true \
           USERUCIO=false \
           BG_FILES=bg_files.json \
-          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
           # XRDRURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
-          # XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
+          XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
           # XRDRBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
-          # XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
+          XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
           # LOG_RSE=BNL-XRD \
           # OUT_RSE=BNL-XRD \
+          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
 
           # Test running singles file
           EBEAM=5 \
@@ -82,10 +83,10 @@ jobs:
           COPYRECO=true \
           COPYLOG=true \
           USERUCIO=false \
-          scripts/run.sh EVGEN/SINGLE/e+/100MeV/130to177deg/e+_100MeV_130to177deg	steer 10
           # XRDRURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
-          # XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
+          XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
           # XRDRBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
-          # XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
+          XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
           # LOG_RSE=BNL-XRD \
           # OUT_RSE=BNL-XRD \
+          scripts/run.sh EVGEN/SINGLE/e+/100MeV/130to177deg/e+_100MeV_130to177deg	steer 10

@@ -32,6 +32,7 @@ jobs:
 
           # Set certificate
           echo "${X509_PROXY}" > x509_user_proxy
+          chmod 600 x509_user_proxy
           export X509_USER_PROXY=x509_user_proxy
           
           # Test running hepmc3 file

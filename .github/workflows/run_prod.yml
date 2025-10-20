@@ -34,18 +34,6 @@ jobs:
           echo "${X509_PROXY}" > x509_user_proxy
           export X509_USER_PROXY=x509_user_proxy
           
-          # Test running hepmc3 file
-          EBEAM=18 \
-          PBEAM=275 \
-          DETECTOR_CONFIG="epic_craterlake" \
-          DETECTOR_VERSION="main" \
-          TAG_PREFIX="CI/${timestamp}" \
-          TAG_SUFFIX="CI_${timestamp}" \
-          COPYRECO=true \
-          COPYLOG=true \
-          USERUCIO=true \
-          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
-
           # Test running hepmc3 mixed with backgrounds
           curl -L -o bg_files.json "https://eicweb.phy.anl.gov/EIC/campaigns/datasets/-/raw/main/config_data/synrad_egasbrems_egascoulomb_egastouschek_hgas_18GeVx275GeV_vacuum_10000Ahr_machineruntime_10ms.json"
           EBEAM=18 \
@@ -58,6 +46,21 @@ jobs:
           COPYLOG=true \
           USERUCIO=true \
           BG_FILES=bg_files.json \
+          scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
+
+          chmod +x .github/scripts/scan_status.sh
+          .github/scripts/scan_status.sh
+      
+          # Test running hepmc3 file
+          EBEAM=18 \
+          PBEAM=275 \
+          DETECTOR_CONFIG="epic_craterlake" \
+          DETECTOR_VERSION="main" \
+          TAG_PREFIX="CI/${timestamp}" \
+          TAG_SUFFIX="CI_${timestamp}" \
+          COPYRECO=true \
+          COPYLOG=true \
+          USERUCIO=true \
           scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
 
           # Test running singles file

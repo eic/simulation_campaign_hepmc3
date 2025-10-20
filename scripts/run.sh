@@ -293,13 +293,27 @@ if [ "${COPYLOG:-false}" == "true" ] ; then
     -s epic -r ${LOG_RSE:-EIC-XRD-LOG} -noregister
   else
     # Token for write authentication
-    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-    if [ -n ${XRDWURL} ] ; then
-      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR} || echo "Cannot write log outputs to xrootd server"
+    echo "=== DEBUG: Attempting to copy LOG files to xrootd ==="
+    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
+    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
+      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
+      echo "BEARER_TOKEN loaded successfully"
     else
-      mkdir -p ${XRDWBASE}/${LOG_DIR} || echo "Cannot write log outputs to xrootd server"
+      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
+      if [ -f "x509_user_proxy" ]; then
+        echo "Found x509_user_proxy, setting X509_USER_PROXY"
+        export X509_USER_PROXY="x509_user_proxy"
+      fi
     fi
-    xrdcp --force --recursive ${LOG_TEMP}/${TASKNAME}.* ${XRDWURL}/${XRDWBASE}/${LOG_DIR}
+    echo "Source: ${LOG_TEMP}/${TASKNAME}.*"
+    echo "Destination: ${XRDWURL}/${XRDWBASE}/${LOG_DIR}"
+    if [ -n ${XRDWURL} ] ; then
+      echo "Creating directory: xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR}"
+      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${LOG_DIR} || echo "ERROR: Cannot create log directory on xrootd server"
+    fi
+    echo "Running: xrdcp --debug 2 --force --recursive ${LOG_TEMP}/${TASKNAME}.* ${XRDWURL}/${XRDWBASE}/${LOG_DIR}"
+    xrdcp --debug 2 --force --recursive ${LOG_TEMP}/${TASKNAME}.* ${XRDWURL}/${XRDWBASE}/${LOG_DIR} || echo "ERROR: xrdcp failed with exit code $?"
+    echo "=== DEBUG: LOG copy attempt completed ==="
   fi
 fi
 
@@ -308,13 +322,27 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else
     # Token for write authentication
-    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-    if [ -n ${XRDWURL} ] ; then
-      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR} || echo "Cannot write simulation outputs to xrootd server"
+    echo "=== DEBUG: Attempting to copy FULL files to xrootd ==="
+    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
+    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
+      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
+      echo "BEARER_TOKEN loaded successfully"
     else
-      mkdir -p ${XRDWBASE}/${FULL_DIR} || echo "Cannot write simulation outputs to xrootd server"
+      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
+      if [ -f "x509_user_proxy" ]; then
+        echo "Found x509_user_proxy, setting X509_USER_PROXY"
+        export X509_USER_PROXY="x509_user_proxy"
+      fi
     fi
-    xrdcp --force --recursive ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${XRDWURL}/${XRDWBASE}/${FULL_DIR} 
+    echo "Source: ${FULL_TEMP}/${TASKNAME}.edm4hep.root"
+    echo "Destination: ${XRDWURL}/${XRDWBASE}/${FULL_DIR}"
+    if [ -n ${XRDWURL} ] ; then
+      echo "Creating directory: xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR}"
+      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${FULL_DIR} || echo "ERROR: Cannot create simulation directory on xrootd server"
+    fi
+    echo "Running: xrdcp --debug 2 --force --recursive ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${XRDWURL}/${XRDWBASE}/${FULL_DIR}"
+    xrdcp --debug 2 --force --recursive ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${XRDWURL}/${XRDWBASE}/${FULL_DIR} || echo "ERROR: xrdcp failed with exit code $?"
+    echo "=== DEBUG: FULL copy attempt completed ==="
   fi
 fi
 
@@ -323,13 +351,27 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else
     # Token for write authentication
-    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-    if [ -n ${XRDWURL} ] ; then
-      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR} || echo "Cannot write reconstructed outputs to xrootd server"
+    echo "=== DEBUG: Attempting to copy RECO files to xrootd ==="
+    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
+    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
+      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
+      echo "BEARER_TOKEN loaded successfully"
     else
-      mkdir -p ${XRDWBASE}/${RECO_DIR} || echo "Cannot write reconstructed outputs to xrootd server"
+      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
+      if [ -f "x509_user_proxy" ]; then
+        echo "Found x509_user_proxy, setting X509_USER_PROXY"
+        export X509_USER_PROXY="x509_user_proxy"
+      fi
     fi
-    xrdcp --force --recursive ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${XRDWURL}/${XRDWBASE}/${RECO_DIR}
+    echo "Source: ${RECO_TEMP}/${TASKNAME}*.edm4eic.root"
+    echo "Destination: ${XRDWURL}/${XRDWBASE}/${RECO_DIR}"
+    if [ -n ${XRDWURL} ] ; then
+      echo "Creating directory: xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR}"
+      xrdfs ${XRDWURL} mkdir -p ${XRDWBASE}/${RECO_DIR} || echo "ERROR: Cannot create reconstruction directory on xrootd server"
+    fi
+    echo "Running: xrdcp --debug 2 --force --recursive ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${XRDWURL}/${XRDWBASE}/${RECO_DIR}"
+    xrdcp --debug 2 --force --recursive ${RECO_TEMP}/${TASKNAME}*.edm4eic.root ${XRDWURL}/${XRDWBASE}/${RECO_DIR} || echo "ERROR: xrdcp failed with exit code $?"
+    echo "=== DEBUG: RECO copy attempt completed ==="
   fi
 fi
 

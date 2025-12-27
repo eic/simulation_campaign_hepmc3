@@ -36,10 +36,6 @@ jobs:
           export X509_USER_PROXY=x509_user_proxy
           
           # Test running hepmc3 file
-          # XRDRURL="xroots://dcint-door001.sdcc.bnl.gov:1094/"
-          # XRDRBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk"
-          # LOG_RSE=BNL-XRD
-          # OUT_RSE=BNL-XRD
           EBEAM=18 \
           PBEAM=275 \
           DETECTOR_CONFIG="epic_craterlake" \
@@ -48,9 +44,8 @@ jobs:
           TAG_SUFFIX="CI_${timestamp}" \
           COPYRECO=true \
           COPYLOG=true \
-          USERUCIO=false \
-          XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
-          XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
+          USERUCIO=true \
+          OUT_RSE=EIC-XRD \
           scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
           
 
@@ -64,10 +59,9 @@ jobs:
           TAG_SUFFIX="CI_Backgrounds_${timestamp}" \
           COPYRECO=true \
           COPYLOG=true \
-          USERUCIO=false \
+          USERUCIO=true \
+          OUT_RSE=BNL-XRD \
           BG_FILES=bg_files.json \
-          XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
-          XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
           scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
 
           # Test running singles file

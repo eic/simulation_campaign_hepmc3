@@ -77,6 +77,7 @@ jobs:
           COPYRECO=true \
           COPYLOG=true \
           USERUCIO=false \
+          RNTUPLE=true \
           XRDWURL="xroots://dcint-door001.sdcc.bnl.gov:1094/" \
           XRDWBASE="/pnfs/sdcc.bnl.gov/eic/epic/disk" \
           scripts/run.sh EVGEN/SINGLE/e+/100MeV/130to177deg/e+_100MeV_130to177deg	steer 10

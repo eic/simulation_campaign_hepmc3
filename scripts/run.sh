@@ -319,8 +319,12 @@ fi
 
 if [ "${COPYFULL:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    podio-ttree-to-rntuple ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${FULL_TEMP}/${TASKNAME}.rntuple.edm4hep.root
-    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.rntuple.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    if [ "${RNTUPLE:-false}" == "true" ] ; then
+      podio-ttree-to-rntuple ${FULL_TEMP}/${TASKNAME}.edm4hep.root ${FULL_TEMP}/${TASKNAME}.rntuple.edm4hep.root
+      python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.rntuple.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    else
+      python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    fi
   else
     # Token for write authentication
     echo "=== DEBUG: Attempting to copy FULL files to xrootd ==="
@@ -349,8 +353,12 @@ fi
 
 if [ "${COPYRECO:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    podio-ttree-to-rntuple ${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root ${RECO_TEMP}/${TASKNAME}.rntuple.eicrecon.edm4eic.root
-    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.rntuple.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    if [ "${RNTUPLE:-false}" == "true" ] ; then
+      podio-ttree-to-rntuple ${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root ${RECO_TEMP}/${TASKNAME}.rntuple.eicrecon.edm4eic.root
+      python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.rntuple.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    else
+      python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    fi
   else
     # Token for write authentication
     echo "=== DEBUG: Attempting to copy RECO files to xrootd ==="

@@ -3,6 +3,7 @@
 import argparse
 import os
 from rucio.client.uploadclient import UploadClient
+from rucio.client import Client
 from rucio.common.exception import InputValidationError, RSEWriteBlocked, NoFilesUploaded, NotAllFilesUploaded
 import logging
 
@@ -30,7 +31,6 @@ upload_items = []  # List to hold the upload items
 # Loop through the file paths and did names (assuming did_names length matches file_paths length)
 for file_path, did_name in zip(file_paths, did_names):
     parent_directory = os.path.dirname(did_name)  # Get the parent directory from did_name
-
     # Create a new dictionary for each file and did_name
     upload_item = {
         'path': file_path,
@@ -49,4 +49,41 @@ logger = logging.getLogger('upload_client')
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 upload_client=UploadClient(logger=logger)
-upload_client.upload(upload_items)
+try:
+    upload_client.upload(upload_items)
+except (NoFilesUploaded, NotAllFilesUploaded) as e:
+    dids = [{'scope': scope, 'name': did_name} for did_name in did_names]
+    # Get replicas for all DIDs in the rse
+    replicas = client.list_replicas(
+        dids,
+        all_states=True,
+        rse_expression=rse
+    )
+    
+    # Collect files that need to be cleaned up
+    files_to_update = []
+    files_to_tombstone = []
+    
+    for replica in replicas:
+        did_name = replica['name']
+        state = replica['states'].get(rse)
+        
+        if state == 'COPYING':
+            logger.warning(
+                "Found COPYING replica %s:%s on %s — deleting",
+                scope, did_name, rse
+            )
+            files_to_update.append({'scope': scope, 'name': did_name})
+            files_to_tombstone.append({'rse': rse, 'scope': scope, 'name': did_name})
+    
+    if files_to_update:
+        # Update replica states to UNAVAILABLE(U)
+        client.update_replicas_states(
+            rse=rse,
+            files=files_to_update,
+            states='U'
+        )
+        # set tombstone to that did, should trigger deletion
+        client.set_tombstone(files_to_tombstone)
+    
+    raise

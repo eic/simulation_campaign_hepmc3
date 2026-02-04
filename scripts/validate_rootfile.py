@@ -108,8 +108,7 @@ def main():
         if not is_valid:
             all_valid = False
             print(f"❌ INVALID: {filepath}")
-            if args.verbose:
-                print(f"   Reason: {message}")
+            print(f"   Reason: {message}")
         elif not args.quiet:
             print(f"✓ VALID: {filepath}")
 

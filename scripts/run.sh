@@ -318,6 +318,15 @@ if [ "${COPYLOG:-false}" == "true" ] ; then
 fi
 
 if [ "${COPYFULL:-false}" == "true" ] ; then
+  # Validate ROOT file before transfer
+  echo "=== Validating FULL ROOT file before transfer ==="
+  python $SCRIPT_DIR/validate_rootfile.py -q "${FULL_TEMP}/${TASKNAME}.edm4hep.root"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: FULL ROOT file validation failed. Skipping transfer."
+    exit 1
+  fi
+  echo "FULL ROOT file validation passed."
+
   if [ "${USERUCIO:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else
@@ -347,6 +356,15 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
 fi
 
 if [ "${COPYRECO:-false}" == "true" ] ; then
+  # Validate ROOT file before transfer
+  echo "=== Validating RECO ROOT file before transfer ==="
+  python $SCRIPT_DIR/validate_rootfile.py -q "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: RECO ROOT file validation failed. Skipping transfer."
+    exit 1
+  fi
+  echo "RECO ROOT file validation passed."
+
   if [ "${USERUCIO:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
   else

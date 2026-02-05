@@ -24,10 +24,9 @@ def validate_rootfile(filepath):
     3. File can be opened by ROOT
     4. File is not a zombie (corrupted header)
     5. File is open for reading
-    6. File does not need recovery via Recover() method
-    7. File was not recovered via kRecovered bit (indicates improper closure)
-    8. File contains at least one key/object
-    9. All objects in file can be read
+    6. File was not recovered via kRecovered bit (indicates improper closure)
+    7. File contains at least one key/object
+    8. All objects in file can be read
 
     Args:
         filepath: Path to the ROOT file
@@ -46,7 +45,6 @@ def validate_rootfile(filepath):
         "not_zombie": False,
         "is_open": False,
         "not_recovered_bit": False,
-        "not_needs_recovery": False,
         "has_keys": False,
         "objects_readable": False
     }
@@ -89,15 +87,7 @@ def validate_rootfile(filepath):
         else:
             errors.append(f"File is not open: {filepath}")
 
-    # Check 6: File does not need recovery (Recover() method check - only if file is open)
-    if tfile and checks["is_open"]:
-        recovered = tfile.Recover()
-        if recovered == 0:
-            checks["not_needs_recovery"] = True
-        else:
-            errors.append(f"File required recovery (possibly corrupted): {filepath}")
-
-    # Check 7: File was not recovered (kRecovered bit check - only if file is open)
+    # Check 6: File was not recovered (kRecovered bit check - only if file is open)
     if tfile and checks["is_open"]:
         if not tfile.TestBit(ROOT.TFile.kRecovered):
             checks["not_recovered_bit"] = True

@@ -51,65 +51,91 @@ def validate_rootfile(filepath):
         "objects_readable": False
     }
 
+    errors = []
+    tfile = None
+
     # Check 1: File exists
-    if not filepath.exists():
-        return False, f"File does not exist: {filepath}", checks
-    checks["file_exists"] = True
+    if filepath.exists():
+        checks["file_exists"] = True
+    else:
+        errors.append(f"File does not exist: {filepath}")
 
-    # Check 2: File is not empty
-    if filepath.stat().st_size == 0:
-        return False, f"File is empty: {filepath}", checks
-    checks["non_empty"] = True
+    # Check 2: File is not empty (only if it exists)
+    if checks["file_exists"]:
+        if filepath.stat().st_size > 0:
+            checks["non_empty"] = True
+        else:
+            errors.append(f"File is empty: {filepath}")
 
-    # Check 3: File can be opened by ROOT
-    tfile = ROOT.TFile.Open(str(filepath))
-    if not tfile:
-        return False, f"Failed to open file: {filepath}", checks
-    checks["can_open"] = True
+    # Check 3: File can be opened by ROOT (only if previous checks passed)
+    if checks["file_exists"] and checks["non_empty"]:
+        tfile = ROOT.TFile.Open(str(filepath))
+        if tfile:
+            checks["can_open"] = True
+        else:
+            errors.append(f"Failed to open file: {filepath}")
 
-    # Check 4: File is not a zombie (corrupted)
-    if tfile.IsZombie():
+    # Check 4: File is not a zombie (only if file opened)
+    if tfile and checks["can_open"]:
+        if not tfile.IsZombie():
+            checks["not_zombie"] = True
+        else:
+            errors.append(f"File is zombie (corrupted): {filepath}")
+
+    # Check 5: File is open for reading (only if file opened and not zombie)
+    if tfile and checks["can_open"] and checks["not_zombie"]:
+        if tfile.IsOpen():
+            checks["is_open"] = True
+        else:
+            errors.append(f"File is not open: {filepath}")
+
+    # Check 6: File was not recovered (kRecovered bit check - only if file is open)
+    if tfile and checks["is_open"]:
+        if not tfile.TestBit(ROOT.TFile.kRecovered):
+            checks["not_recovered_bit"] = True
+        else:
+            errors.append("File was recovered (it was likely not closed properly)")
+
+    # Check 7: File does not need recovery (Recover() method check - only if file is open)
+    if tfile and checks["is_open"]:
+        recovered = tfile.Recover()
+        if recovered == 0:
+            checks["not_needs_recovery"] = True
+        else:
+            errors.append(f"File required recovery (possibly corrupted): {filepath}")
+
+    # Check 8: File contains at least one key/object (only if file is open)
+    if tfile and checks["is_open"]:
+        keys = tfile.GetListOfKeys()
+        if keys and keys.GetEntries() > 0:
+            checks["has_keys"] = True
+        else:
+            errors.append(f"File contains no keys/objects: {filepath}")
+
+    # Check 9: All objects in file can be read (only if file has keys)
+    if tfile and checks["has_keys"]:
+        keys = tfile.GetListOfKeys()
+        all_readable = True
+        for key in keys:
+            obj = key.ReadObj()
+            if not obj:
+                errors.append(f"Failed to read object '{key.GetName()}' from file: {filepath}")
+                all_readable = False
+                break
+        if all_readable:
+            checks["objects_readable"] = True
+
+    # Close file if it was opened
+    if tfile:
         tfile.Close()
-        return False, f"File is zombie (corrupted): {filepath}", checks
-    checks["not_zombie"] = True
 
-    # Check 5: File is open for reading
-    if not tfile.IsOpen():
-        tfile.Close()
-        return False, f"File is not open: {filepath}", checks
-    checks["is_open"] = True
-
-    # Check 6: File was not recovered (kRecovered bit check - indicates improper closure)
-    if tfile.TestBit(ROOT.TFile.kRecovered):
-        tfile.Close()
-        return False, "File was recovered (it was likely not closed properly)", checks
-    checks["not_recovered_bit"] = True
-
-    # Check 7: File does not need recovery (Recover() method check)
-    recovered = tfile.Recover()
-    if recovered > 0:
-        tfile.Close()
-        return False, f"File required recovery (possibly corrupted): {filepath}", checks
-    checks["not_needs_recovery"] = True
-
-    # Check 8: File contains at least one key/object
-    keys = tfile.GetListOfKeys()
-    if not keys or keys.GetEntries() == 0:
-        tfile.Close()
-        return False, f"File contains no keys/objects: {filepath}", checks
-    checks["has_keys"] = True
-
-    # Check 9: All objects in file can be read
-    for key in keys:
-        obj = key.ReadObj()
-        if not obj:
-            tfile.Close()
-            return False, f"Failed to read object '{key.GetName()}' from file: {filepath}", checks
-
-    checks["objects_readable"] = True
-    tfile.Close()
-
-    return True, "All validation checks passed", checks
+    # Determine if file is valid
+    if all(checks.values()):
+        return True, "All validation checks passed", checks
+    else:
+        # Return the first error message, or a generic message if no specific error
+        error_msg = errors[0] if errors else "Some validation checks failed"
+        return False, error_msg, checks
 
 
 def main():

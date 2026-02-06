@@ -67,11 +67,14 @@ def validate_rootfile(filepath):
 
     # Check 3: File can be opened by ROOT (only if previous checks passed)
     if checks["file_exists"] and checks["non_empty"]:
-        tfile = ROOT.TFile.Open(str(filepath))
-        if tfile:
-            checks["can_open"] = True
-        else:
-            errors.append(f"Failed to open file: {filepath}")
+        try:
+            tfile = ROOT.TFile.Open(str(filepath))
+            if tfile:
+                checks["can_open"] = True
+            else:
+                errors.append(f"Failed to open file: {filepath}")
+        except (OSError, Exception) as e:
+            errors.append(f"Failed to open file: {filepath} ({str(e)})")
 
     # Check 4: File is not a zombie (only if file opened)
     if tfile and checks["can_open"]:

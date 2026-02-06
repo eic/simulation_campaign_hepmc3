@@ -323,7 +323,7 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
   python $SCRIPT_DIR/validate_rootfile.py "${FULL_TEMP}/${TASKNAME}.edm4hep.root"
   if [ $? -ne 0 ]; then
     echo "ERROR: FULL ROOT file validation failed. Skipping transfer."
-    exit 1
+    exit 65
   fi
   echo "FULL ROOT file validation passed."
 
@@ -361,7 +361,7 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
   python $SCRIPT_DIR/validate_rootfile.py "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root"
   if [ $? -ne 0 ]; then
     echo "ERROR: RECO ROOT file validation failed. Skipping transfer."
-    exit 1
+    exit 65
   fi
   echo "RECO ROOT file validation passed."
 

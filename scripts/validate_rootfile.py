@@ -14,13 +14,22 @@ except ImportError:
     sys.exit(1)
 
 
+def is_xrootd_path(filepath):
+    """Return True if filepath is an XRootD URL (e.g. root://server//path/file.root)."""
+    return str(filepath).startswith("root://")
+
+
 def validate_rootfile(filepath):
     """
     Validate a ROOT file for corruption.
 
+    Supports both local filesystem paths and XRootD URLs (root://...).
+    For XRootD paths, filesystem-level checks (exists, size) are skipped
+    and ROOT's native XRootD support is used to open and inspect the file.
+
     Performs the following checks (ALL must pass for file to be valid):
-    1. File exists on filesystem
-    2. File is not empty (size > 0)
+    1. File exists on filesystem (local only)
+    2. File is not empty (size > 0) (local only)
     3. File can be opened by ROOT
     4. File is not a zombie (corrupted header)
     5. File is open for reading
@@ -29,7 +38,7 @@ def validate_rootfile(filepath):
     8. All objects in file can be read
 
     Args:
-        filepath: Path to the ROOT file
+        filepath: Path to the ROOT file (local path or XRootD URL)
 
     Returns:
         tuple: (is_valid, message, checks_passed)
@@ -37,7 +46,12 @@ def validate_rootfile(filepath):
             - message: Success or error message
             - checks_passed: dict with individual check results
     """
-    filepath = Path(filepath)
+    xrootd = is_xrootd_path(filepath)
+    filepath_str = str(filepath)
+
+    # For local paths, wrap in Path for filesystem operations
+    local_path = None if xrootd else Path(filepath_str)
+
     checks = {
         "file_exists": False,
         "non_empty": False,
@@ -52,43 +66,48 @@ def validate_rootfile(filepath):
     errors = []
     tfile = None
 
-    # Check 1: File exists
-    if filepath.exists():
+    if xrootd:
+        # Skip filesystem checks for XRootD paths; let ROOT handle access
         checks["file_exists"] = True
+        checks["non_empty"] = True
     else:
-        errors.append(f"File does not exist: {filepath}")
-
-    # Check 2: File is not empty (only if it exists)
-    if checks["file_exists"]:
-        if filepath.stat().st_size > 0:
-            checks["non_empty"] = True
+        # Check 1: File exists
+        if local_path.exists():
+            checks["file_exists"] = True
         else:
-            errors.append(f"File is empty: {filepath}")
+            errors.append(f"File does not exist: {filepath_str}")
+
+        # Check 2: File is not empty (only if it exists)
+        if checks["file_exists"]:
+            if local_path.stat().st_size > 0:
+                checks["non_empty"] = True
+            else:
+                errors.append(f"File is empty: {filepath_str}")
 
     # Check 3: File can be opened by ROOT (only if previous checks passed)
     if checks["file_exists"] and checks["non_empty"]:
         try:
-            tfile = ROOT.TFile.Open(str(filepath))
+            tfile = ROOT.TFile.Open(filepath_str)
             if tfile:
                 checks["can_open"] = True
             else:
-                errors.append(f"Failed to open file: {filepath}")
+                errors.append(f"Failed to open file: {filepath_str}")
         except (OSError, Exception) as e:
-            errors.append(f"Failed to open file: {filepath} ({str(e)})")
+            errors.append(f"Failed to open file: {filepath_str} ({str(e)})")
 
     # Check 4: File is not a zombie (only if file opened)
     if tfile and checks["can_open"]:
         if not tfile.IsZombie():
             checks["not_zombie"] = True
         else:
-            errors.append(f"File is zombie (corrupted): {filepath}")
+            errors.append(f"File is zombie (corrupted): {filepath_str}")
 
     # Check 5: File is open for reading (only if file opened and not zombie)
     if tfile and checks["can_open"] and checks["not_zombie"]:
         if tfile.IsOpen():
             checks["is_open"] = True
         else:
-            errors.append(f"File is not open: {filepath}")
+            errors.append(f"File is not open: {filepath_str}")
 
     # Check 6: File was not recovered (kRecovered bit check - only if file is open)
     if tfile and checks["is_open"]:
@@ -97,22 +116,22 @@ def validate_rootfile(filepath):
         else:
             errors.append("File was recovered (it was likely not closed properly)")
 
-    # Check 8: File contains at least one key/object (only if file is open)
+    # Check 7: File contains at least one key/object (only if file is open)
     if tfile and checks["is_open"]:
         keys = tfile.GetListOfKeys()
         if keys and keys.GetEntries() > 0:
             checks["has_keys"] = True
         else:
-            errors.append(f"File contains no keys/objects: {filepath}")
+            errors.append(f"File contains no keys/objects: {filepath_str}")
 
-    # Check 9: All objects in file can be read (only if file has keys)
+    # Check 8: All objects in file can be read (only if file has keys)
     if tfile and checks["has_keys"]:
         keys = tfile.GetListOfKeys()
         all_readable = True
         for key in keys:
             obj = key.ReadObj()
             if not obj:
-                errors.append(f"Failed to read object '{key.GetName()}' from file: {filepath}")
+                errors.append(f"Failed to read object '{key.GetName()}' from file: {filepath_str}")
                 all_readable = False
                 break
         if all_readable:

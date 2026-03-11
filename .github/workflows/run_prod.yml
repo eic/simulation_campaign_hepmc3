@@ -43,9 +43,10 @@ jobs:
           TAG_PREFIX="CI/${timestamp}" \
           TAG_SUFFIX="CI_${timestamp}" \
           COPYRECO=true \
+          COPYFULL=true\
           COPYLOG=true \
           USERUCIO=true \
-          OUT_RSE=EIC-XRD \
+          OUT_RSE=BNL-XRD \
           scripts/run.sh EVGEN/DIS/NC/18x275/minQ2=1/pythia8NCDIS_18x275_minQ2=1_beamEffects_xAngle=-0.025_hiDiv_1 hepmc3.tree.root 10
           
 
@@ -58,6 +59,7 @@ jobs:
           TAG_PREFIX="CI/Backgrounds/${timestamp}" \
           TAG_SUFFIX="CI_Backgrounds_${timestamp}" \
           COPYRECO=true \
+          COPYFULL=true \
           COPYLOG=true \
           USERUCIO=true \
           BG_FILES=bg_files.json \

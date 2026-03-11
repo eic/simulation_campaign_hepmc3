@@ -143,7 +143,8 @@ mkdir -p ${RECO_TEMP}
 
 # Mix background events if the input file is a hepmc file
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
-  BG_ARGS=()  
+  BG_ARGS=()
+  META_ARGS=()
 
   SIGNAL_STATUS_VALUE=${SIGNAL_STATUS:-0}
   STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
@@ -162,6 +163,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"
       DECAY_STATUSES="${DECAY_STATUSES} $((status+2))"
     done < <(jq -c '.[]' ${BG_FILES})
+    META_ARGS=(--meta.runParameters "SignalFile/C=${BASENAME}.${EXTENSION}" "SignalFrequency/I=${SIGNAL_FREQ:-0}" "BackgroundConfig/C=${BG_FILES}" "IntegrationWindow/C=2000ns")
     # Run the background merger with proper logging
     {
       date
@@ -206,6 +208,7 @@ fi
     --numberOfEvents ${EVENTS_PER_TASK}
     --compactFile ${DETECTOR_PATH}/${DETECTOR_CONFIG}${EBEAM:+${PBEAM:+_${EBEAM}x${PBEAM}}}.xml
     --outputFile ${FULL_TEMP}/${TASKNAME}.edm4hep.root
+    "${META_ARGS[@]}"
   )
   # Uncommon flags based on EXTENSION
   if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then

@@ -268,7 +268,22 @@ IS_BG_MIXED="false"
 if [ -n "${BG_FILES:-}" ]; then IS_BG_MIXED="true"; fi
 REQUESTER_PWG="${REQUESTER_PWG:-other}"
 GENERATOR="${GENERATOR:-other}"
-METADATA_JSON="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\"}"
+# Extract software release from eic-info: strip trailing (-default)?-<40hexchars>
+JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '^.+(?=(-default)?-[0-9a-f]{40}$)')
+# Build geometry_config: strip leading "epic_" prefix from DETECTOR_CONFIG, append _EBEAMxPBEAM
+GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
+if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
+else
+  # For singles runs, omit beam/ion fields and parse single_particle from steer file
+  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR:-single_particle}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
+  SINGLE_PARTICLE=$(grep -oP '(?<=SIM\.gun\.particle = ")[^"]+' ${INPUT_FILE})
+  if [[ -n "${SINGLE_PARTICLE}" ]]; then
+    METADATA_JSON_BASE="${METADATA_JSON_BASE%\}}, \"single_particle\": \"${SINGLE_PARTICLE}\"}"
+  fi
+fi
+METADATA_JSON_FULL="${METADATA_JSON_BASE%\}}, \"data_level\": \"simulation\"}"
+METADATA_JSON_RECO="${METADATA_JSON_BASE%\}}, \"data_level\": \"reconstruction\"}"
 
 # Data egress to directory
 
@@ -342,7 +357,7 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
   echo "FULL ROOT file validation passed."
 
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON}" || { echo "ERROR: Rucio registration failed for FULL file."; exit 78; }
+    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_FULL}" || { echo "ERROR: Rucio registration failed for FULL file."; exit 78; }
   else
     # Token for write authentication
     echo "=== DEBUG: Attempting to copy FULL files to xrootd ==="
@@ -380,7 +395,7 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
   echo "RECO ROOT file validation passed."
 
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON}" || { echo "ERROR: Rucio registration failed for RECO file."; exit 78; }
+    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_RECO}" || { echo "ERROR: Rucio registration failed for RECO file."; exit 78; }
   else
     # Token for write authentication
     echo "=== DEBUG: Attempting to copy RECO files to xrootd ==="

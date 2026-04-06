@@ -115,6 +115,7 @@ METADATA_SCHEMA = {
                 "eic_sr_geant4",
                 "eic_esr_xsuite",
                 "sherpa",
+                "single_particle",
                 "other"
             ]
         },

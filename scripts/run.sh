@@ -285,7 +285,10 @@ REQUESTER_PWG="${REQUESTER_PWG:-other}"
 # Extract software release from eic-info: strip trailing (-default)?-<40hexchars> in one pass
 JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly)')
 # Build geometry_config: strip leading "epic_" prefix from DETECTOR_CONFIG, append _EBEAMxPBEAM
-GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
+GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}${PBEAM_SPECIES:+_${PBEAM_SPECIES}}"
+if [ "${PBEAM_SPECIES}" = "p" ]; then
+  GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
+fi
 # Common metadata fields shared by all run types (no closing brace yet)
 METADATA_JSON_COMMON="\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"geometry_config\": \"${GEOMETRY_CONFIG}\""
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then

@@ -267,16 +267,17 @@ fi
 IS_BG_MIXED="false"
 if [ -n "${BG_FILES:-}" ]; then IS_BG_MIXED="true"; fi
 REQUESTER_PWG="${REQUESTER_PWG:-other}"
-GENERATOR="${GENERATOR:-other}"
 # Extract software release from eic-info: strip trailing (-default)?-<40hexchars>
 JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '^.+(?=(-default)?-[0-9a-f]{40}$)')
 # Build geometry_config: strip leading "epic_" prefix from DETECTOR_CONFIG, append _EBEAMxPBEAM
 GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
+  GENERATOR="${GENERATOR:-other}"
   METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
 else
+  GENERATOR="${GENERATOR:-single_particle}"
   # For singles runs, omit beam/ion fields and parse single_particle from steer file
-  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR:-single_particle}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
+  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
   SINGLE_PARTICLE=$(grep -oP '(?<=SIM\.gun\.particle = ")[^"]+' ${INPUT_FILE})
   if [[ -n "${SINGLE_PARTICLE}" ]]; then
     METADATA_JSON_BASE="${METADATA_JSON_BASE%\}}, \"single_particle\": \"${SINGLE_PARTICLE}\"}"

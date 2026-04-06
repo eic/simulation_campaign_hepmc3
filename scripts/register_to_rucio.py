@@ -88,7 +88,8 @@ METADATA_SCHEMA = {
                 "pi0",
                 "kaon-",
                 "kaon+",
-                "gamma"
+                "gamma",
+                "mu-"
             ]
         },
         "geometry_config": {

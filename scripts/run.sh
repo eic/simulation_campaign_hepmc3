@@ -297,9 +297,54 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   fi
 else
   GENERATOR="${GENERATOR:-single_particle}"
-  # For singles runs, omit beam/ion fields and parse single_particle from steer file
+  # For singles runs, omit beam/ion fields and parse single_particle and gun params from steer file
   SINGLE_PARTICLE=$(grep -oP '(?<=SIM\.gun\.particle = ")[^"]+' ${INPUT_FILE})
-  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"${SINGLE_PARTICLE:+, \"single_particle\": \"${SINGLE_PARTICLE}\"}}"
+  GUN_DISTRIBUTION=$(grep -oP '(?<=SIM\.gun\.distribution = ")[^"]+' ${INPUT_FILE} || true)
+
+  # Parse momentum in GeV: prefer explicit momentumMin/momentumMax, fall back to energy
+  GUN_MOMENTUM_MIN=$(grep -oP 'SIM\.gun\.momentumMin\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
+  GUN_MOMENTUM_MAX=$(grep -oP 'SIM\.gun\.momentumMax\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
+  if [ -z "${GUN_MOMENTUM_MIN}" ]; then
+    GUN_MOMENTUM_MIN_MEV=$(grep -oP 'SIM\.gun\.momentumMin\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
+    [ -n "${GUN_MOMENTUM_MIN_MEV}" ] && GUN_MOMENTUM_MIN=$(echo "${GUN_MOMENTUM_MIN_MEV}" | awk '{printf "%g", $1/1000}')
+  fi
+  if [ -z "${GUN_MOMENTUM_MAX}" ]; then
+    GUN_MOMENTUM_MAX_MEV=$(grep -oP 'SIM\.gun\.momentumMax\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
+    [ -n "${GUN_MOMENTUM_MAX_MEV}" ] && GUN_MOMENTUM_MAX=$(echo "${GUN_MOMENTUM_MAX_MEV}" | awk '{printf "%g", $1/1000}')
+  fi
+  if [ -z "${GUN_MOMENTUM_MIN}" ] && [ -z "${GUN_MOMENTUM_MAX}" ]; then
+    GUN_ENERGY_GEV=$(grep -oP 'SIM\.gun\.energy\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
+    GUN_ENERGY_MEV=$(grep -oP 'SIM\.gun\.energy\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
+    if [ -n "${GUN_ENERGY_GEV}" ]; then
+      GUN_MOMENTUM_MIN=$(echo "${GUN_ENERGY_GEV}" | awk '{printf "%g", $1}')
+      GUN_MOMENTUM_MAX=${GUN_MOMENTUM_MIN}
+    elif [ -n "${GUN_ENERGY_MEV}" ]; then
+      GUN_MOMENTUM_MIN=$(echo "${GUN_ENERGY_MEV}" | awk '{printf "%g", $1/1000}')
+      GUN_MOMENTUM_MAX=${GUN_MOMENTUM_MIN}
+    fi
+  fi
+
+  # Parse angular range in degrees directly from steer file
+  GUN_THETA_MIN=$(grep -oP 'SIM\.gun\.thetaMin\s*=\s*\K[\d.]+(?=\s*\*\s*degree)' ${INPUT_FILE} || true)
+  GUN_THETA_MAX=$(grep -oP 'SIM\.gun\.thetaMax\s*=\s*\K[\d.]+(?=\s*\*\s*degree)' ${INPUT_FILE} || true)
+
+  # Parse phi range (degrees); default to 0 and 360 if not set in steer file
+  GUN_PHI_MIN=$(grep -oP '(?<=SIM\.gun\.phiMin = )[\d.+-]+' ${INPUT_FILE} || true)
+  GUN_PHI_MAX=$(grep -oP '(?<=SIM\.gun\.phiMax = )[\d.+-]+' ${INPUT_FILE} || true)
+  GUN_PHI_MIN=${GUN_PHI_MIN:-0}
+  GUN_PHI_MAX=${GUN_PHI_MAX:-360}
+
+  # Build gun fields conditionally
+  GUN_FIELDS="${SINGLE_PARTICLE:+, \"gun_particle\": \"${SINGLE_PARTICLE}\"}"
+  GUN_FIELDS+="${GUN_DISTRIBUTION:+, \"gun_distribution\": \"${GUN_DISTRIBUTION}\"}"
+  GUN_FIELDS+="${GUN_MOMENTUM_MIN:+, \"gun_momentum_min\": ${GUN_MOMENTUM_MIN}}"
+  GUN_FIELDS+="${GUN_MOMENTUM_MAX:+, \"gun_momentum_max\": ${GUN_MOMENTUM_MAX}}"
+  GUN_FIELDS+="${GUN_THETA_MIN:+, \"gun_theta_min\": ${GUN_THETA_MIN}}"
+  GUN_FIELDS+="${GUN_THETA_MAX:+, \"gun_theta_max\": ${GUN_THETA_MAX}}"
+  GUN_FIELDS+="${GUN_PHI_MIN:+, \"gun_phi_min\": ${GUN_PHI_MIN}}"
+  GUN_FIELDS+="${GUN_PHI_MAX:+, \"gun_phi_max\": ${GUN_PHI_MAX}}"
+
+  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"${GUN_FIELDS}}"
 fi
 METADATA_JSON_FULL="${METADATA_JSON_BASE%\}}, \"data_level\": \"simulation\"}"
 METADATA_JSON_RECO="${METADATA_JSON_BASE%\}}, \"data_level\": \"reconstruction\"}"

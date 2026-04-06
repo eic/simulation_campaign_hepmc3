@@ -75,7 +75,7 @@ METADATA_SCHEMA = {
                 "reconstruction"
             ]
         },
-        "single_particle": {
+        "gun_particle": {
             "type": "string",
             "description": "Single particle type. Optional - only applicable to single particle datasets.",
             "enum": [
@@ -96,6 +96,35 @@ METADATA_SCHEMA = {
             "type": "string",
             "description": "Geometry configuration tag (e.g. craterlake_18x275, craterlake_5x41_He3)",
             "pattern": "^[a-z][a-z0-9]*_[0-9]+x[0-9]+(_.+)?$"
+        },
+        "gun_momentum_min": {
+            "type": "number",
+            "description": "Minimum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_max."
+        },
+        "gun_momentum_max": {
+            "type": "number",
+            "description": "Maximum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_min."
+        },
+        "gun_theta_min": {
+            "type": "number",
+            "description": "Minimum polar angle (degrees) for particle gun angular distribution."
+        },
+        "gun_theta_max": {
+            "type": "number",
+            "description": "Maximum polar angle (degrees) for particle gun angular distribution."
+        },
+        "gun_phi_min": {
+            "type": "number",
+            "description": "Minimum azimuthal angle (degrees) for particle gun distribution. Default is 0."
+        },
+        "gun_phi_max": {
+            "type": "number",
+            "description": "Maximum azimuthal angle (degrees) for particle gun distribution. Default is 360."
+        },
+        "gun_distribution": {
+            "type": "string",
+            "description": "Angular distribution type for particle gun.",
+            "enum": ["uniform", "cos(theta)", "eta", "pseudorapidity", "ffbar"]
         },
         "generator": {
             "type": "string",

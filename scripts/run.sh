@@ -290,7 +290,11 @@ GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
 METADATA_JSON_COMMON="\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"geometry_config\": \"${GEOMETRY_CONFIG}\""
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   GENERATOR="${GENERATOR:-other}"
-  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"generator\": \"${GENERATOR}\"}"
+  if [[ "${BASENAME}" == *"BACKGROUNDS"* ]]; then
+    METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"}"
+  else
+    METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"generator\": \"${GENERATOR}\"}"
+  fi
 else
   GENERATOR="${GENERATOR:-single_particle}"
   # For singles runs, omit beam/ion fields and parse single_particle from steer file

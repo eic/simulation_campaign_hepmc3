@@ -71,10 +71,8 @@ METADATA_SCHEMA = {
             "type": "string",
             "description": "Data processing level.",
             "enum": [
-                "event_generation",
                 "simulation",
-                "reconstruction",
-                "analysis"
+                "reconstruction"
             ]
         },
         "single_particle": {

@@ -3,6 +3,21 @@ set -Euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 IFS=$'\n\t'
 
+# Load bearer token or fall back to x509 proxy for xrootd authentication
+setup_xrd_auth() {
+  echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
+  if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
+    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
+    echo "BEARER_TOKEN loaded successfully"
+  else
+    echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
+    if [ -f "x509_user_proxy" ]; then
+      echo "Found x509_user_proxy, setting X509_USER_PROXY"
+      export X509_USER_PROXY="x509_user_proxy"
+    fi
+  fi
+}
+
 # Load job environment (mask secrets)
 if ls environment*.sh ; then
   grep -v BEARER environment*.sh
@@ -267,21 +282,20 @@ fi
 IS_BG_MIXED="false"
 if [ -n "${BG_FILES:-}" ]; then IS_BG_MIXED="true"; fi
 REQUESTER_PWG="${REQUESTER_PWG:-other}"
-# Extract software release from eic-info: strip trailing (-default)?-<40hexchars>
-JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '^.+(?=(-default)?-[0-9a-f]{40}$)')
+# Extract software release from eic-info: strip trailing (-default)?-<40hexchars> in one pass
+JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly)')
 # Build geometry_config: strip leading "epic_" prefix from DETECTOR_CONFIG, append _EBEAMxPBEAM
 GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
+# Common metadata fields shared by all run types (no closing brace yet)
+METADATA_JSON_COMMON="\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"geometry_config\": \"${GEOMETRY_CONFIG}\""
 if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   GENERATOR="${GENERATOR:-other}"
-  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
+  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"generator\": \"${GENERATOR}\"}"
 else
   GENERATOR="${GENERATOR:-single_particle}"
   # For singles runs, omit beam/ion fields and parse single_particle from steer file
-  METADATA_JSON_BASE="{\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"generator\": \"${GENERATOR}\", \"geometry_config\": \"${GEOMETRY_CONFIG}\"}"
   SINGLE_PARTICLE=$(grep -oP '(?<=SIM\.gun\.particle = ")[^"]+' ${INPUT_FILE})
-  if [[ -n "${SINGLE_PARTICLE}" ]]; then
-    METADATA_JSON_BASE="${METADATA_JSON_BASE%\}}, \"single_particle\": \"${SINGLE_PARTICLE}\"}"
-  fi
+  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"${SINGLE_PARTICLE:+, \"single_particle\": \"${SINGLE_PARTICLE}\"}}"
 fi
 METADATA_JSON_FULL="${METADATA_JSON_BASE%\}}, \"data_level\": \"simulation\"}"
 METADATA_JSON_RECO="${METADATA_JSON_BASE%\}}, \"data_level\": \"reconstruction\"}"
@@ -322,19 +336,8 @@ if [ "${COPYLOG:-false}" == "true" ] ; then
     -d "/${LOG_DIR}/${TASKNAME}.${TIME_TAG}.log.tar.gz" \
     -s epic -r ${LOG_RSE:-EIC-XRD-LOG} --noregister
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy LOG files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${LOG_TEMP}/${TASKNAME}.*"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${LOG_DIR}"
     if [ -n ${XRDWURL} ] ; then
@@ -360,19 +363,8 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_FULL}" || { echo "ERROR: Rucio registration failed for FULL file."; exit 78; }
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy FULL files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${FULL_TEMP}/${TASKNAME}.edm4hep.root"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${FULL_DIR}"
     if [ -n ${XRDWURL} ] ; then
@@ -398,19 +390,8 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
   if [ "${USERUCIO:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_RECO}" || { echo "ERROR: Rucio registration failed for RECO file."; exit 78; }
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy RECO files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${RECO_TEMP}/${TASKNAME}*.edm4eic.root"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${RECO_DIR}"
     if [ -n ${XRDWURL} ] ; then

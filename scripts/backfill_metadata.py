@@ -18,7 +18,7 @@ ion_map = {
     "He": "He3",
     "H2": "H2",
 }
-single_particles = [
+gun_particles = [
     "e-", "e+", "proton", "neutron",
     "pi+", "pi-", "pi0",
     "kaon-", "kaon+",
@@ -136,6 +136,16 @@ for did in datasets_dids:
             generator = value
             break
 
+    # Ion species (parsed before geometry_config so it can be used in the suffix)
+    ion_species = None
+    match = ion_regex.search(path)
+    if match:
+        ion_raw = match.group(1)
+        if ion_raw in ion_map:
+            ion_species = ion_map.get(ion_raw)
+    else:
+        ion_species = "p"
+
     parts = path.strip("/").split("/")
     # data_level, geometry_config
     geometry_config = None
@@ -147,12 +157,14 @@ for did in datasets_dids:
         elif parts[0] == "FULL":
             data_level = "simulation"
             geometry_config = parts[2]
-    # Normalize geometry_config: strip "epic_" prefix, append _EBEAMxPBEAM
+    # Normalize geometry_config: strip "epic_" prefix, append _EBEAMxPBEAM[_SPECIES]
     if geometry_config:
         if geometry_config.startswith("epic_"):
             geometry_config = geometry_config[len("epic_"):]
         if electron_beam_energy and ion_beam_energy:
             geometry_config = f"{geometry_config}_{electron_beam_energy}x{ion_beam_energy}"
+            if ion_species and ion_species != "p":
+                geometry_config = f"{geometry_config}_{ion_species}"
         elif electron_beam_energy and 'BEAMGAS/electron' in path:
             default_ion = ebeam_defaults.get(electron_beam_energy)
             if default_ion:
@@ -162,16 +174,6 @@ for did in datasets_dids:
             default_ebeam = pbeam_defaults.get(ion_beam_energy)
             if default_ebeam:
                 geometry_config = f"{geometry_config}_{default_ebeam}x{ion_beam_energy}"
-
-    ion_species = None
-    match = ion_regex.search(path)
-
-    if match:
-        ion_raw = match.group(1)
-        if ion_raw in ion_map:
-            ion_species = ion_map.get(ion_raw)
-    else:
-        ion_species = "p"
 
     requester_pwg = "other"
     for key, value in pwg_override_map.items():
@@ -185,12 +187,19 @@ for did in datasets_dids:
         q2_min = None
         q2_max = None
 
-    single_particle = None
+    gun_particle = None
+    gun_momentum_min = None
+    gun_momentum_max = None
+    gun_theta_min = None
+    gun_theta_max = None
+    gun_phi_min = None
+    gun_phi_max = None
+    gun_distribution = None
     if "SINGLE" in path:
         normalized_path = re.sub(r'[_/]', ' ', path.lower())
-        for p in single_particles:
+        for p in gun_particles:
             if p in normalized_path:
-                single_particle = p
+                gun_particle = p
                 break
         generator = "single_particle"
         # geometry_config for singles uses 5x41 default; beam fields are not included in metadata
@@ -202,6 +211,29 @@ for did in datasets_dids:
         q2_min = None
         q2_max = None
 
+        # Momentum in GeV from path (e.g. 100MeV, 1GeV)
+        mom_mev = re.search(r'/(\d+)MeV/', path)
+        mom_gev = re.search(r'/(\d+)GeV/', path)
+        if mom_gev:
+            gun_momentum_min = float(mom_gev.group(1))
+        elif mom_mev:
+            gun_momentum_min = float(mom_mev.group(1)) / 1000
+        if gun_momentum_min is not None:
+            gun_momentum_max = gun_momentum_min
+
+        # Theta range from NtoMdeg pattern
+        theta_match = re.search(r'/(\d+)to(\d+)deg', path)
+        if theta_match:
+            gun_theta_min = float(theta_match.group(1))
+            gun_theta_max = float(theta_match.group(2))
+            gun_distribution = "cos(theta)"
+        elif "etaScan" in path:
+            gun_distribution = "uniform"
+
+        # Phi always defaults to full azimuthal range
+        gun_phi_min = 0
+        gun_phi_max = 360
+
     print(f"\nDID: {did}")
     print(f"software_release: {software_release}")
     print(f"electron_beam_energy: {electron_beam_energy}")
@@ -211,11 +243,22 @@ for did in datasets_dids:
     print(f"q2_max: {q2_max}")
     print(f"is_background_mixed: {is_background_mixed}")
     print(f"data_level: {data_level}")
-    if single_particle:
-        print(f"single_particle: {single_particle}")
+    if gun_particle:
+        print(f"gun_particle: {gun_particle}")
     print(f"generator: {generator}")
     print(f"geometry_config: {geometry_config}")
     print(f"requester_pwg: {requester_pwg}")
+    if gun_momentum_min is not None:
+        print(f"gun_momentum_min: {gun_momentum_min}")
+        print(f"gun_momentum_max: {gun_momentum_max}")
+    if gun_theta_min is not None:
+        print(f"gun_theta_min: {gun_theta_min}")
+        print(f"gun_theta_max: {gun_theta_max}")
+    if gun_phi_min is not None:
+        print(f"gun_phi_min: {gun_phi_min}")
+        print(f"gun_phi_max: {gun_phi_max}")
+    if gun_distribution:
+        print(f"gun_distribution: {gun_distribution}")
     print("-" * 40)
 
     # now build metadata dictionary, excluding None values
@@ -230,9 +273,16 @@ for did in datasets_dids:
         "data_level": data_level,
         "generator": generator,
         "geometry_config": geometry_config,
+        "gun_momentum_min": gun_momentum_min,
+        "gun_momentum_max": gun_momentum_max,
+        "gun_theta_min": gun_theta_min,
+        "gun_theta_max": gun_theta_max,
+        "gun_phi_min": gun_phi_min,
+        "gun_phi_max": gun_phi_max,
+        "gun_distribution": gun_distribution,
     }
-    if single_particle:
-        metadata["single_particle"] = single_particle
+    if gun_particle:
+        metadata["gun_particle"] = gun_particle
     if requester_pwg:
         metadata["requester_pwg"] = requester_pwg
     metadata = {k: v for k, v in metadata.items() if v is not None}

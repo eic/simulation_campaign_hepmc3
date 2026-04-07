@@ -5,12 +5,7 @@ import argparse
 import re
 
 from rucio.client import Client
-
-generators_list_ci = [
-    "pythia6", "pythia8", "beagle", "djangoh", "rapgap", "dempgen",
-    "sartre", "lager", "estarlight", "getalm", "eicmesonsfgen",
-    "eic_sr_geant4", "eic_esr_xsuite", "sherpa"
-]
+from shared_utils import detect_generator, detect_q2, detect_pwg
 ion_map = {
     "Au": "Au197",
     "Ru": "Ru96",
@@ -25,34 +20,12 @@ gun_particles = [
     "gamma", "mu-"
 ]
 
-# Priority mapping from path keywords
-# More specific keys must come before broader ones (first match wins)
-pwg_override_map = {
-    "D0_ABCONV": "jets_hf",
-    "Lc_ABCONV": "jets_hf",
-    "DIJET_ABCONV": "jets_hf",
-    "DIJET": "jets_hf",
-    "DIS": "inclusive",
-    "SIDIS": "semi_inclusive",
-    "EXCLUSIVE": "edt",
-}
-
-# Generator override map for known path keywords
-generator_override_map = {
-    "SYNRAD": "eic_sr_geant4",
-    "DIS/NC": "pythia8",
-    "DIS/CC": "pythia8",
-    "UPSILON_ABCONV": "estarlight",
-}
-
 # Beam energy override map for paths that don't encode energy (ebeam, pbeam)
 beam_energy_override_map = {
     "UPSILON_ABCONV": (18, 275),
 }
 
-ion_regex = re.compile(r'(?:^|[/_])e(Au|Ru|He|Cu|H2)(?:[/_]|$)')
-gen_pattern_ci = r'(' + '|'.join(generators_list_ci) + r')'
-gen_pattern_epic = r'(EpIC)'  # case-sensitive
+ion_regex = re.compile(r'(?:^|[/_])e(Au|Ru|He|Cu|H2)(?:[/_]|$)')  # case-sensitive
 
 
 parser = argparse.ArgumentParser(description="Backfill metadata from DID name")
@@ -107,34 +80,10 @@ for did in datasets_dids:
 
     # Q2 Extraction
     # some q2_xtox or q2_x_x or q2_Xto Y
-    q2_min, q2_max = None, None
-    range_match = re.search(r'q2_(\d+)(?:to|_)(\d+)', path, re.IGNORECASE)
-    min_only_match = re.search(r'minQ2=(\d+)', path)
-    q2_single_match = re.search(r'(?<![a-zA-Z])q2_(\d+)(?![to\d_])', path, re.IGNORECASE)
-
-    if range_match:
-        q2_min, q2_max = int(range_match.group(1)), int(range_match.group(2))
-    elif min_only_match:
-        q2_min = int(min_only_match.group(1))
-    elif q2_single_match:
-        q2_min = int(q2_single_match.group(1))
+    q2_min, q2_max = detect_q2(path)
 
     # Generator Detection
-    # We search for the first occurrence of any generator name in the list
-    # First check EpIC (case-sensitive)
-    generator = "other"
-    match_epic = re.search(gen_pattern_epic, path)
-    if match_epic:
-        generator = "epic"
-    else:
-        match_ci = re.search(gen_pattern_ci, path, re.IGNORECASE)
-        if match_ci:
-            generator = match_ci.group(1).lower()
-    # Override generator based on known path keywords
-    for key, value in generator_override_map.items():
-        if f"/{key}/" in path or path.endswith(f"/{key}"):
-            generator = value
-            break
+    generator = detect_generator(path, is_single="SINGLE" in path)
 
     # Ion species (parsed before geometry_config so it can be used in the suffix)
     ion_species = None
@@ -175,11 +124,7 @@ for did in datasets_dids:
             if default_ebeam:
                 geometry_config = f"{geometry_config}_{default_ebeam}x{ion_beam_energy}"
 
-    requester_pwg = "other"
-    for key, value in pwg_override_map.items():
-        if f"/{key}/" in path or path.endswith(f"/{key}"):
-            requester_pwg = value
-            break
+    requester_pwg = detect_pwg(path)
     if "BACKGROUNDS" in path:
         electron_beam_energy = None
         ion_beam_energy = None

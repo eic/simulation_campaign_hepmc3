@@ -246,7 +246,7 @@ fi
     --log-filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.log \
     -- \
   npsim "${common_flags[@]}" "${uncommon_flags[@]}"
-  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root  
+  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root
 } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.npsim.log | tail -n1000
 
 # Run eicrecon reconstruction
@@ -272,85 +272,24 @@ fi
 ls -al ${LOG_TEMP}/${TASKNAME}.*
 
 # Build metadata JSON string for Rucio registration
-PBEAM_ENERGY="${PBEAM%%_*}"
-PBEAM_SPECIES="${PBEAM##*_}"
-# If PBEAM contains no underscore, the species extraction above returns the
-# full string (same as the energy).  In that case default to proton ("p").
-if [ "${PBEAM_SPECIES}" = "${PBEAM_ENERGY}" ]; then
-    PBEAM_SPECIES="p"
-fi
-IS_BG_MIXED="false"
-if [ -n "${BG_FILES:-}" ]; then IS_BG_MIXED="true"; fi
-REQUESTER_PWG="${REQUESTER_PWG:-other}"
 # Extract software release from eic-info: strip trailing (-default)?-<40hexchars> in one pass
 JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly)')
-# Build geometry_config: strip leading "epic_" prefix from DETECTOR_CONFIG, append _EBEAMxPBEAM
-GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}${PBEAM_SPECIES:+_${PBEAM_SPECIES}}"
-if [ "${PBEAM_SPECIES}" = "p" ]; then
-  GEOMETRY_CONFIG="${DETECTOR_CONFIG#epic_}_${EBEAM}x${PBEAM_ENERGY}"
+# Extract metadata from FULL file via podio (all fields except software_release)
+PODIO_ARGS=("${FULL_TEMP}/${TASKNAME}.edm4hep.root")
+if [[ "$EXTENSION" != "hepmc3.tree.root" ]]; then
+  PODIO_ARGS+=(--gun)
 fi
-# Common metadata fields shared by all run types (no closing brace yet)
-METADATA_JSON_COMMON="\"software_release\": \"${JUG_XL_TAG}\", \"requester_pwg\": \"${REQUESTER_PWG}\", \"is_background_mixed\": ${IS_BG_MIXED}, \"geometry_config\": \"${GEOMETRY_CONFIG}\""
-if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
-  GENERATOR="${GENERATOR:-other}"
-  if [[ "${BASENAME}" == *"BACKGROUNDS"* ]]; then
-    METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"}"
-  else
-    METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"electron_beam_energy\": ${EBEAM}, \"ion_beam_energy\": ${PBEAM_ENERGY}, \"ion_species\": \"${PBEAM_SPECIES}\", \"generator\": \"${GENERATOR}\"}"
-  fi
-else
-  GENERATOR="${GENERATOR:-single_particle}"
-  # For singles runs, omit beam/ion fields and parse single_particle and gun params from steer file
-  SINGLE_PARTICLE=$(grep -oP '(?<=SIM\.gun\.particle = ")[^"]+' ${INPUT_FILE})
-  GUN_DISTRIBUTION=$(grep -oP '(?<=SIM\.gun\.distribution = ")[^"]+' ${INPUT_FILE} || true)
-
-  # Parse momentum in GeV: prefer explicit momentumMin/momentumMax, fall back to energy
-  GUN_MOMENTUM_MIN=$(grep -oP 'SIM\.gun\.momentumMin\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
-  GUN_MOMENTUM_MAX=$(grep -oP 'SIM\.gun\.momentumMax\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
-  if [ -z "${GUN_MOMENTUM_MIN}" ]; then
-    GUN_MOMENTUM_MIN_MEV=$(grep -oP 'SIM\.gun\.momentumMin\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
-    [ -n "${GUN_MOMENTUM_MIN_MEV}" ] && GUN_MOMENTUM_MIN=$(echo "${GUN_MOMENTUM_MIN_MEV}" | awk '{printf "%g", $1/1000}')
-  fi
-  if [ -z "${GUN_MOMENTUM_MAX}" ]; then
-    GUN_MOMENTUM_MAX_MEV=$(grep -oP 'SIM\.gun\.momentumMax\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
-    [ -n "${GUN_MOMENTUM_MAX_MEV}" ] && GUN_MOMENTUM_MAX=$(echo "${GUN_MOMENTUM_MAX_MEV}" | awk '{printf "%g", $1/1000}')
-  fi
-  if [ -z "${GUN_MOMENTUM_MIN}" ] && [ -z "${GUN_MOMENTUM_MAX}" ]; then
-    GUN_ENERGY_GEV=$(grep -oP 'SIM\.gun\.energy\s*=\s*\K[\d.]+(?=\s*\*\s*GeV)' ${INPUT_FILE} || true)
-    GUN_ENERGY_MEV=$(grep -oP 'SIM\.gun\.energy\s*=\s*\K[\d.]+(?=\s*\*\s*MeV)' ${INPUT_FILE} || true)
-    if [ -n "${GUN_ENERGY_GEV}" ]; then
-      GUN_MOMENTUM_MIN=$(echo "${GUN_ENERGY_GEV}" | awk '{printf "%g", $1}')
-      GUN_MOMENTUM_MAX=${GUN_MOMENTUM_MIN}
-    elif [ -n "${GUN_ENERGY_MEV}" ]; then
-      GUN_MOMENTUM_MIN=$(echo "${GUN_ENERGY_MEV}" | awk '{printf "%g", $1/1000}')
-      GUN_MOMENTUM_MAX=${GUN_MOMENTUM_MIN}
-    fi
-  fi
-
-  # Parse angular range in degrees directly from steer file
-  GUN_THETA_MIN=$(grep -oP 'SIM\.gun\.thetaMin\s*=\s*\K[\d.]+(?=\s*\*\s*degree)' ${INPUT_FILE} || true)
-  GUN_THETA_MAX=$(grep -oP 'SIM\.gun\.thetaMax\s*=\s*\K[\d.]+(?=\s*\*\s*degree)' ${INPUT_FILE} || true)
-
-  # Parse phi range (degrees); default to 0 and 360 if not set in steer file
-  GUN_PHI_MIN=$(grep -oP '(?<=SIM\.gun\.phiMin = )[\d.+-]+' ${INPUT_FILE} || true)
-  GUN_PHI_MAX=$(grep -oP '(?<=SIM\.gun\.phiMax = )[\d.+-]+' ${INPUT_FILE} || true)
-  GUN_PHI_MIN=${GUN_PHI_MIN:-0}
-  GUN_PHI_MAX=${GUN_PHI_MAX:-360}
-
-  # Build gun fields conditionally
-  GUN_FIELDS="${SINGLE_PARTICLE:+, \"gun_particle\": \"${SINGLE_PARTICLE}\"}"
-  GUN_FIELDS+="${GUN_DISTRIBUTION:+, \"gun_distribution\": \"${GUN_DISTRIBUTION}\"}"
-  GUN_FIELDS+="${GUN_MOMENTUM_MIN:+, \"gun_momentum_min\": ${GUN_MOMENTUM_MIN}}"
-  GUN_FIELDS+="${GUN_MOMENTUM_MAX:+, \"gun_momentum_max\": ${GUN_MOMENTUM_MAX}}"
-  GUN_FIELDS+="${GUN_THETA_MIN:+, \"gun_theta_min\": ${GUN_THETA_MIN}}"
-  GUN_FIELDS+="${GUN_THETA_MAX:+, \"gun_theta_max\": ${GUN_THETA_MAX}}"
-  GUN_FIELDS+="${GUN_PHI_MIN:+, \"gun_phi_min\": ${GUN_PHI_MIN}}"
-  GUN_FIELDS+="${GUN_PHI_MAX:+, \"gun_phi_max\": ${GUN_PHI_MAX}}"
-
-  METADATA_JSON_BASE="{${METADATA_JSON_COMMON}, \"generator\": \"${GENERATOR}\"${GUN_FIELDS}}"
+if [[ "${BASENAME}" == *"BACKGROUNDS"* ]]; then
+  PODIO_ARGS+=(--no-beam)
 fi
-METADATA_JSON_FULL="${METADATA_JSON_BASE%\}}, \"data_level\": \"simulation\"}"
-METADATA_JSON_RECO="${METADATA_JSON_BASE%\}}, \"data_level\": \"reconstruction\"}"
+PODIO_JSON=$(python $SCRIPT_DIR/parse_podio_metadata.py "${PODIO_ARGS[@]}")
+
+# Only software_release remains outside podio scope
+METADATA_JSON_BASE=$(jq -n --arg software_release "${JUG_XL_TAG}" '{software_release: $software_release}')
+
+# Merge podio-extracted fields (geometry_config, data_level, beam/gun params)
+METADATA_JSON_FULL=$(jq -n --argjson base "${METADATA_JSON_BASE}" --argjson podio "${PODIO_JSON}" '$base * $podio')
+METADATA_JSON_RECO=$(jq -n --argjson base "${METADATA_JSON_FULL}" '$base | .data_level = "reconstruction"')
 
 # Data egress to directory
 

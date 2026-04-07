@@ -14,7 +14,7 @@ import json
 import re
 import podio.root_io
 
-from shared_utils import detect_generator, detect_q2, detect_pwg
+from shared_utils import detect_generator, detect_q2, detect_pwg, detect_dsc
 
 
 def rad_to_deg(r):
@@ -55,6 +55,12 @@ if input_files:
 # is_background_mixed from hepmc_merger_background_files
 bg_files = get_str(params, "hepmc_merger_background_files")
 result["is_background_mixed"] = bool(bg_files and bg_files.strip() not in ("", "None", "[]"))
+
+# requester_dsc from path keywords or is_background_mixed
+if input_files:
+    dsc = detect_dsc(input_path, is_background_mixed=result["is_background_mixed"])
+    if dsc:
+        result["requester_dsc"] = dsc
 
 # data_level from outputFile extension: edm4hep -> simulation, edm4eic -> reconstruction
 output_file = get_str(params, "outputFile")

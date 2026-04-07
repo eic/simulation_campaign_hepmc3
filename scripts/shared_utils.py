@@ -24,6 +24,21 @@ def detect_pwg(path):
     return "other"
 
 
+def detect_dsc(path, is_background_mixed=False):
+    """Detect requester_dsc from a file path or DID path.
+
+    Args:
+        path: File path or Rucio DID path string.
+        is_background_mixed: True if the dataset includes background mixing.
+
+    Returns:
+        DSC string if detected, or None.
+    """
+    if is_background_mixed or "Backgrounds" in path or "Bkg" in path or "BACKGROUNDS" in path:
+        return "tracking"
+    return None
+
+
 generators_list_ci = [
     "pythia6", "pythia8", "beagle", "djangoh", "rapgap", "dempgen",
     "sartre", "lager", "estarlight", "getalm", "eicmesonsfgen",

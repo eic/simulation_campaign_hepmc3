@@ -5,7 +5,7 @@ import argparse
 import re
 
 from rucio.client import Client
-from shared_utils import detect_generator, detect_q2, detect_pwg
+from shared_utils import detect_generator, detect_q2, detect_pwg, detect_dsc
 ion_map = {
     "Au": "Au197",
     "Ru": "Ru96",
@@ -125,6 +125,7 @@ for did in datasets_dids:
                 geometry_config = f"{geometry_config}_{default_ebeam}x{ion_beam_energy}"
 
     requester_pwg = detect_pwg(path)
+    requester_dsc = detect_dsc(path, is_background_mixed=is_background_mixed)
     if "BACKGROUNDS" in path:
         electron_beam_energy = None
         ion_beam_energy = None
@@ -193,6 +194,8 @@ for did in datasets_dids:
     print(f"generator: {generator}")
     print(f"geometry_config: {geometry_config}")
     print(f"requester_pwg: {requester_pwg}")
+    if requester_dsc:
+        print(f"requester_dsc: {requester_dsc}")
     if gun_momentum_min is not None:
         print(f"gun_momentum_min_gev: {gun_momentum_min}")
         print(f"gun_momentum_max_gev: {gun_momentum_max}")
@@ -230,6 +233,8 @@ for did in datasets_dids:
         metadata["gun_particle"] = gun_particle
     if requester_pwg:
         metadata["requester_pwg"] = requester_pwg
+    if requester_dsc:
+        metadata["requester_dsc"] = requester_dsc
     metadata = {k: v for k, v in metadata.items() if v is not None}
 
     # now add the metadata to the dataset DID in Rucio

@@ -126,6 +126,14 @@ METADATA_SCHEMA = {
             "description": "Angular distribution type for particle gun.",
             "enum": ["uniform", "cos(theta)", "eta", "pseudorapidity", "ffbar"]
         },
+        "requester_dsc": {
+            "type": "string",
+            "description": "Detector Subsystem Collaboration requesting the dataset. Optional.",
+            "enum": [
+                "tracking",
+                "other"
+            ]
+        },
         "generator": {
             "type": "string",
             "description": "Generator name",

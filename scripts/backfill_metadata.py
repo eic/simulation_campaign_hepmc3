@@ -127,6 +127,7 @@ for did in datasets_dids:
     requester_pwg = detect_pwg(path)
     requester_dsc = detect_dsc(path, is_background_mixed=is_background_mixed)
     if "BACKGROUNDS" in path:
+        requester_pwg = None
         electron_beam_energy = None
         ion_beam_energy = None
         ion_species = None
@@ -142,6 +143,7 @@ for did in datasets_dids:
     gun_phi_max = None
     gun_distribution = None
     if "SINGLE" in path:
+        requester_pwg = None
         normalized_path = re.sub(r'[_/]', ' ', path.lower())
         for p in gun_particles:
             if p in normalized_path:

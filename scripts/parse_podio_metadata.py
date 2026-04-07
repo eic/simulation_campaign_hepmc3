@@ -45,7 +45,8 @@ input_files = get_str(params, "inputFiles")
 if input_files:
     input_path = input_files.strip("[]'\" ")
     result["generator"] = detect_generator(input_path, is_single=include_gun)
-    result["requester_pwg"] = detect_pwg(input_path)
+    if not include_gun and not no_beam:
+        result["requester_pwg"] = detect_pwg(input_path)
     q2_min, q2_max = detect_q2(input_path)
     if q2_min is not None:
         result["q2_min_gev2"] = q2_min

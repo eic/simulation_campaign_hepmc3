@@ -160,7 +160,6 @@ METADATA_SCHEMA = {
     },
     "required": [
         "software_release",
-        "requester_pwg",
         "is_background_mixed",
         "data_level",
         "geometry_config",

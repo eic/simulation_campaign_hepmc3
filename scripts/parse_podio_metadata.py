@@ -48,9 +48,9 @@ if input_files:
     result["requester_pwg"] = detect_pwg(input_path)
     q2_min, q2_max = detect_q2(input_path)
     if q2_min is not None:
-        result["q2_min"] = q2_min
+        result["q2_min_gev2"] = q2_min
     if q2_max is not None:
-        result["q2_max"] = q2_max
+        result["q2_max_gev2"] = q2_max
 
 # is_background_mixed from hepmc_merger_background_files
 bg_files = get_str(params, "hepmc_merger_background_files")
@@ -81,8 +81,8 @@ if compact_file:
     if not no_beam and not include_gun:
         beam_match = re.search(r'_(\d+)x(\d+)(?:_(.+))?$', basename)
         if beam_match:
-            result["electron_beam_energy"] = int(beam_match.group(1))
-            result["ion_beam_energy"] = int(beam_match.group(2))
+            result["electron_beam_energy_gev"] = int(beam_match.group(1))
+            result["ion_beam_energy_gev"] = int(beam_match.group(2))
             species = beam_match.group(3)
             result["ion_species"] = species if species is not None else "p"
 
@@ -106,24 +106,24 @@ if include_gun:
 
     if energy is not None:
         momentum_gev = round(float(energy) / 1000, 6)
-        result["gun_momentum_min"] = momentum_gev
-        result["gun_momentum_max"] = momentum_gev
+        result["gun_momentum_min_gev"] = momentum_gev
+        result["gun_momentum_max_gev"] = momentum_gev
     elif not npsim_defaults and mom_min is not None and mom_max is not None:
-        result["gun_momentum_min"] = round(float(mom_min) / 1000, 6)
-        result["gun_momentum_max"] = round(float(mom_max) / 1000, 6)
+        result["gun_momentum_min_gev"] = round(float(mom_min) / 1000, 6)
+        result["gun_momentum_max_gev"] = round(float(mom_max) / 1000, 6)
 
     # gun_theta: radians -> degrees
     theta_min = get_str(params, "gun.thetaMin")
     theta_max = get_str(params, "gun.thetaMax")
     if theta_min is not None:
-        result["gun_theta_min"] = rad_to_deg(theta_min)
+        result["gun_theta_min_deg"] = rad_to_deg(theta_min)
     if theta_max is not None:
-        result["gun_theta_max"] = rad_to_deg(theta_max)
+        result["gun_theta_max_deg"] = rad_to_deg(theta_max)
 
     # gun_phi: radians -> degrees; default 0 and 360
     phi_min = get_str(params, "gun.phiMin")
     phi_max = get_str(params, "gun.phiMax")
-    result["gun_phi_min"] = rad_to_deg(phi_min) if phi_min is not None else 0
-    result["gun_phi_max"] = rad_to_deg(phi_max) if phi_max is not None else 360
+    result["gun_phi_min_deg"] = rad_to_deg(phi_min) if phi_min is not None else 0
+    result["gun_phi_max_deg"] = rad_to_deg(phi_max) if phi_max is not None else 360
 
 print(json.dumps(result))

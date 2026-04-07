@@ -35,19 +35,19 @@ METADATA_SCHEMA = {
                 "other"
             ]
         },
-        "q2_min": {
+        "q2_min_gev2": {
             "type": "number",
             "description": "Minimum Q2 value (GeV^2). Optional - not applicable to all datasets."
         },
-        "q2_max": {
+        "q2_max_gev2": {
             "type": "number",
             "description": "Maximum Q2 value (GeV^2). Optional - not applicable to all datasets."
         },
-        "electron_beam_energy": {
+        "electron_beam_energy_gev": {
             "type": "number",
             "description": "Electron beam energy (GeV)"
         },
-        "ion_beam_energy": {
+        "ion_beam_energy_gev": {
             "type": "number",
             "description": "Ion/nucleus beam energy (GeV)"
         },
@@ -97,27 +97,27 @@ METADATA_SCHEMA = {
             "description": "Geometry configuration tag (e.g. craterlake_18x275, craterlake_5x41_He3)",
             "pattern": "^[a-z][a-z0-9]*_[0-9]+x[0-9]+(_.+)?$"
         },
-        "gun_momentum_min": {
+        "gun_momentum_min_gev": {
             "type": "number",
-            "description": "Minimum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_max."
+            "description": "Minimum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_max_gev."
         },
-        "gun_momentum_max": {
+        "gun_momentum_max_gev": {
             "type": "number",
-            "description": "Maximum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_min."
+            "description": "Maximum particle gun momentum (GeV). For fixed-energy runs, equals gun_momentum_min_gev."
         },
-        "gun_theta_min": {
+        "gun_theta_min_deg": {
             "type": "number",
             "description": "Minimum polar angle (degrees) for particle gun angular distribution."
         },
-        "gun_theta_max": {
+        "gun_theta_max_deg": {
             "type": "number",
             "description": "Maximum polar angle (degrees) for particle gun angular distribution."
         },
-        "gun_phi_min": {
+        "gun_phi_min_deg": {
             "type": "number",
             "description": "Minimum azimuthal angle (degrees) for particle gun distribution. Default is 0."
         },
-        "gun_phi_max": {
+        "gun_phi_max_deg": {
             "type": "number",
             "description": "Maximum azimuthal angle (degrees) for particle gun distribution. Default is 360."
         },

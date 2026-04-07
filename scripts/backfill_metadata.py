@@ -181,11 +181,11 @@ for did in datasets_dids:
 
     print(f"\nDID: {did}")
     print(f"software_release: {software_release}")
-    print(f"electron_beam_energy: {electron_beam_energy}")
-    print(f"ion_beam_energy: {ion_beam_energy}")
+    print(f"electron_beam_energy_gev: {electron_beam_energy}")
+    print(f"ion_beam_energy_gev: {ion_beam_energy}")
     print(f"ion_species:  {ion_species}")
-    print(f"q2_min: {q2_min}")
-    print(f"q2_max: {q2_max}")
+    print(f"q2_min_gev2: {q2_min}")
+    print(f"q2_max_gev2: {q2_max}")
     print(f"is_background_mixed: {is_background_mixed}")
     print(f"data_level: {data_level}")
     if gun_particle:
@@ -194,14 +194,14 @@ for did in datasets_dids:
     print(f"geometry_config: {geometry_config}")
     print(f"requester_pwg: {requester_pwg}")
     if gun_momentum_min is not None:
-        print(f"gun_momentum_min: {gun_momentum_min}")
-        print(f"gun_momentum_max: {gun_momentum_max}")
+        print(f"gun_momentum_min_gev: {gun_momentum_min}")
+        print(f"gun_momentum_max_gev: {gun_momentum_max}")
     if gun_theta_min is not None:
-        print(f"gun_theta_min: {gun_theta_min}")
-        print(f"gun_theta_max: {gun_theta_max}")
+        print(f"gun_theta_min_deg: {gun_theta_min}")
+        print(f"gun_theta_max_deg: {gun_theta_max}")
     if gun_phi_min is not None:
-        print(f"gun_phi_min: {gun_phi_min}")
-        print(f"gun_phi_max: {gun_phi_max}")
+        print(f"gun_phi_min_deg: {gun_phi_min}")
+        print(f"gun_phi_max_deg: {gun_phi_max}")
     if gun_distribution:
         print(f"gun_distribution: {gun_distribution}")
     print("-" * 40)
@@ -209,21 +209,21 @@ for did in datasets_dids:
     # now build metadata dictionary, excluding None values
     metadata = {
         "software_release": software_release,
-        "electron_beam_energy": electron_beam_energy,
-        "ion_beam_energy": ion_beam_energy,
+        "electron_beam_energy_gev": electron_beam_energy,
+        "ion_beam_energy_gev": ion_beam_energy,
         "ion_species": ion_species,
-        "q2_min": q2_min,
-        "q2_max": q2_max,
+        "q2_min_gev2": q2_min,
+        "q2_max_gev2": q2_max,
         "is_background_mixed": is_background_mixed,
         "data_level": data_level,
         "generator": generator,
         "geometry_config": geometry_config,
-        "gun_momentum_min": gun_momentum_min,
-        "gun_momentum_max": gun_momentum_max,
-        "gun_theta_min": gun_theta_min,
-        "gun_theta_max": gun_theta_max,
-        "gun_phi_min": gun_phi_min,
-        "gun_phi_max": gun_phi_max,
+        "gun_momentum_min_gev": gun_momentum_min,
+        "gun_momentum_max_gev": gun_momentum_max,
+        "gun_theta_min_deg": gun_theta_min,
+        "gun_theta_max_deg": gun_theta_max,
+        "gun_phi_min_deg": gun_phi_min,
+        "gun_phi_max_deg": gun_phi_max,
         "gun_distribution": gun_distribution,
     }
     if gun_particle:

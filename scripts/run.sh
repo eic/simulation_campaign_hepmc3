@@ -3,6 +3,21 @@ set -Euo pipefail
 trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
 IFS=$'\n\t'
 
+# Load bearer token or fall back to x509 proxy for xrootd authentication
+setup_xrd_auth() {
+  echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
+  if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
+    export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
+    echo "BEARER_TOKEN loaded successfully"
+  else
+    echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
+    if [ -f "x509_user_proxy" ]; then
+      echo "Found x509_user_proxy, setting X509_USER_PROXY"
+      export X509_USER_PROXY="x509_user_proxy"
+    fi
+  fi
+}
+
 # Load job environment (mask secrets)
 if ls environment*.sh ; then
   grep -v BEARER environment*.sh
@@ -231,7 +246,7 @@ fi
     --log-filename ${LOG_TEMP}/${TASKNAME}.npsim.prmon.log \
     -- \
   npsim "${common_flags[@]}" "${uncommon_flags[@]}"
-  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root  
+  ls -al ${FULL_TEMP}/${TASKNAME}.edm4hep.root
 } 2>&1 | tee ${LOG_TEMP}/${TASKNAME}.npsim.log | tail -n1000
 
 # Run eicrecon reconstruction
@@ -255,6 +270,26 @@ fi
 
 # List log files
 ls -al ${LOG_TEMP}/${TASKNAME}.*
+
+# Build metadata JSON string for Rucio registration
+# Extract software release from eic-info: strip trailing (-default)?-<40hexchars> in one pass
+JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly)')
+# Extract metadata from FULL file via podio (all fields except software_release)
+PODIO_ARGS=("${FULL_TEMP}/${TASKNAME}.edm4hep.root")
+if [[ "$EXTENSION" != "hepmc3.tree.root" ]]; then
+  PODIO_ARGS+=(--gun)
+fi
+if [[ "${BASENAME}" == *"BACKGROUNDS"* ]]; then
+  PODIO_ARGS+=(--no-beam)
+fi
+PODIO_JSON=$(python $SCRIPT_DIR/parse_podio_metadata.py "${PODIO_ARGS[@]}")
+
+# Only software_release remains outside podio scope
+METADATA_JSON_BASE=$(jq -n --arg software_release "${JUG_XL_TAG}" '{software_release: $software_release}')
+
+# Merge podio-extracted fields (geometry_config, data_level, beam/gun params)
+METADATA_JSON_FULL=$(jq -n --argjson base "${METADATA_JSON_BASE}" --argjson podio "${PODIO_JSON}" '$base * $podio')
+METADATA_JSON_RECO=$(jq -n --argjson base "${METADATA_JSON_FULL}" '$base | .data_level = "reconstruction"')
 
 # Data egress to directory
 
@@ -290,21 +325,10 @@ if [ "${COPYLOG:-false}" == "true" ] ; then
     python $SCRIPT_DIR/register_to_rucio.py \
     -f "${LOG_TEMP}/${TASKNAME}.log.tar.gz" \
     -d "/${LOG_DIR}/${TASKNAME}.${TIME_TAG}.log.tar.gz" \
-    -s epic -r ${LOG_RSE:-EIC-XRD-LOG} -noregister
+    -s epic -r ${LOG_RSE:-EIC-XRD-LOG} --noregister
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy LOG files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${LOG_TEMP}/${TASKNAME}.*"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${LOG_DIR}"
     if [ -n ${XRDWURL} ] ; then
@@ -328,21 +352,10 @@ if [ "${COPYFULL:-false}" == "true" ] ; then
   echo "FULL ROOT file validation passed."
 
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    python $SCRIPT_DIR/register_to_rucio.py -f "${FULL_TEMP}/${TASKNAME}.edm4hep.root" -d "/${FULL_DIR}/${TASKNAME}.edm4hep.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_FULL}" || { echo "ERROR: Rucio registration failed for FULL file."; exit 78; }
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy FULL files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${FULL_TEMP}/${TASKNAME}.edm4hep.root"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${FULL_DIR}"
     if [ -n ${XRDWURL} ] ; then
@@ -366,21 +379,10 @@ if [ "${COPYRECO:-false}" == "true" ] ; then
   echo "RECO ROOT file validation passed."
 
   if [ "${USERUCIO:-false}" == "true" ] ; then
-    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD}
+    python $SCRIPT_DIR/register_to_rucio.py -f "${RECO_TEMP}/${TASKNAME}.eicrecon.edm4eic.root" -d "/${RECO_DIR}/${TASKNAME}.eicrecon.edm4eic.root" -s epic -r ${OUT_RSE:-EIC-XRD} --metadata-json "${METADATA_JSON_RECO}" || { echo "ERROR: Rucio registration failed for RECO file."; exit 78; }
   else
-    # Token for write authentication
     echo "=== DEBUG: Attempting to copy RECO files to xrootd ==="
-    echo "BEARER_TOKEN file location: ${_CONDOR_CREDS:-.}/eic.use"
-    if [ -f "${_CONDOR_CREDS:-.}/eic.use" ]; then
-      export BEARER_TOKEN=$(cat ${_CONDOR_CREDS:-.}/eic.use)
-      echo "BEARER_TOKEN loaded successfully"
-    else
-      echo "WARNING: BEARER_TOKEN file not found at ${_CONDOR_CREDS:-.}/eic.use"
-      if [ -f "x509_user_proxy" ]; then
-        echo "Found x509_user_proxy, setting X509_USER_PROXY"
-        export X509_USER_PROXY="x509_user_proxy"
-      fi
-    fi
+    setup_xrd_auth
     echo "Source: ${RECO_TEMP}/${TASKNAME}*.edm4eic.root"
     echo "Destination: ${XRDWURL}/${XRDWBASE}/${RECO_DIR}"
     if [ -n ${XRDWURL} ] ; then

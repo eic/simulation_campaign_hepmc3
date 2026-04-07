@@ -273,7 +273,7 @@ ls -al ${LOG_TEMP}/${TASKNAME}.*
 
 # Build metadata JSON string for Rucio registration
 # Extract software release from eic-info: strip trailing (-default)?-<40hexchars> in one pass
-JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly)')
+JUG_XL_TAG=$(eic-info 2>/dev/null | grep -oP '(?<=jug_dev: )\S+' | head -1 | grep -oP '(\d+\.\d+\.\d+-stable|nightly|unstable)')
 # Extract metadata from FULL file via podio (all fields except software_release)
 PODIO_ARGS=("${FULL_TEMP}/${TASKNAME}.edm4hep.root")
 if [[ "$EXTENSION" != "hepmc3.tree.root" ]]; then

@@ -240,9 +240,9 @@ for did in datasets_dids:
     metadata = {k: v for k, v in metadata.items() if v is not None}
 
     # now add the metadata to the dataset DID in Rucio
-    #try:
-    #    client.set_metadata_bulk(scope="epic", name=did, metadata=metadata)
-    #    print(f"Metadata added successfully for DID: {did}")
-    #except Exception as e:
-    #    print(f"Error adding metadata for DID: {did}, error: {e}")
+    try:
+        client.set_metadata_bulk(scope="epic", name=did, meta=metadata, recursive=False)
+        print(f"Metadata added successfully for DID: {did}")
+    except Exception as e:
+        print(f"Error adding metadata for DID: {did}, error: {e}")
 

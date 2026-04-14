@@ -33,6 +33,10 @@ parser.add_argument(
     "-c", "--campaigns", nargs="+", required=True,
     help="List of campaign version strings (e.g. 26.03.0 26.03.1)"
 )
+parser.add_argument(
+    "--dry-run", action="store_true",
+    help="Print metadata that would be set without making any changes in Rucio"
+)
 args = parser.parse_args()
 
 # Build version_map from campaign args: X.Y.Z -> X.Y.Z-stable
@@ -240,9 +244,13 @@ for did in datasets_dids:
     metadata = {k: v for k, v in metadata.items() if v is not None}
 
     # now add the metadata to the dataset DID in Rucio
-    try:
-        client.set_metadata_bulk(scope="epic", name=did, meta=metadata, recursive=False)
-        print(f"Metadata added successfully for DID: {did}")
-    except Exception as e:
-        print(f"Error adding metadata for DID: {did}, error: {e}")
+    if args.dry_run:
+        print(f"[DRY RUN] Would set metadata for DID: {did}")
+        print(f"[DRY RUN] metadata: {metadata}")
+    else:
+        try:
+            client.set_metadata_bulk(scope="epic", name=did, meta=metadata, recursive=False)
+            print(f"Metadata added successfully for DID: {did}")
+        except Exception as e:
+            print(f"Error adding metadata for DID: {did}, error: {e}")
 

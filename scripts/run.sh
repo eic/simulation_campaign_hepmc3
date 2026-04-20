@@ -19,9 +19,9 @@ setup_xrd_auth() {
 }
 
 # Load job environment (mask secrets)
-if ls environment*.sh ; then
-  grep -v BEARER environment*.sh
-  source environment*.sh
+if ls environment-${CSV_BASE:-}.sh ; then
+  grep -v BEARER environment-${CSV_BASE:-}.sh
+  source environment-${CSV_BASE:-}.sh
 fi
 
 # Check arguments

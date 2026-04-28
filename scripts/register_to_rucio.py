@@ -95,7 +95,7 @@ METADATA_SCHEMA = {
         "geometry_config": {
             "type": "string",
             "description": "Geometry configuration tag (e.g. craterlake_18x275, craterlake_5x41_He3)",
-            "pattern": "^[a-z][a-z0-9]*_[0-9]+x[0-9]+(_.+)?$"
+            "pattern": "^[a-z][a-z0-9_]*_[0-9]+x[0-9]+(_.+)?$"
         },
         "gun_momentum_min_gev": {
             "type": "number",

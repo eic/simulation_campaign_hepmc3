@@ -20,7 +20,7 @@ METADATA_SCHEMA = {
     "properties": {
         "software_release": {
             "type": "string",
-            "description": "Container version tag (e.g. 26.03.0-stable, nightly, unstable)",
+            "description": "Container version tag (e.g. 26.03.0-stable, nightly, unstable, or default)",
             "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+-stable|nightly|unstable|default)$"
         },
         "requester_pwg": {

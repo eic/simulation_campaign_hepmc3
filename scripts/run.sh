@@ -170,8 +170,9 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
       freq=$(echo "$bg_file" | jq -r '.freq')
       skip=$(echo "$bg_file" | jq -r '.skip')
       
-      # This ensures that the number of background events skipped before sampling from the source is atleast 1.
-      skip=$(awk "BEGIN {print int((${SKIP_N_EVENTS}*${skip})+1)}")  
+      # Rate-scaled advance + SEED-driven random offset. Rate term preserves bg-per-signal proportionality;
+      # random term decorrelates parallel tasks. Merger wraps bg file, so large offsets are safe.
+      skip=$(awk "BEGIN {srand(${SEED}); print int((${SKIP_N_EVENTS}*${skip})+1) + int(rand()*2147483647)}")
       status=$(echo "$bg_file" | jq -r '.status')
       BG_ARGS+=(--bgFile "$file" "$freq" "$skip" "$status")
       STABLE_STATUSES="${STABLE_STATUSES} $((status+1))"

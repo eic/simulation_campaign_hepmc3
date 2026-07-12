@@ -204,7 +204,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
         --signalFile ${INPUT_FILE} \
         --signalFreq ${SIGNAL_FREQ:-0} \
         --signalStatus ${SIGNAL_STATUS:-0} \
-        -w ${INTEGRATION_WINDOW} \
+        --intWindow ${INTEGRATION_WINDOW} \
         "${BG_ARGS[@]}" \
         --outputFile ${FULL_TEMP}/${TASKNAME}.hepmc3.tree.root
 

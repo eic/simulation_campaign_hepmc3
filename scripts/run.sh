@@ -172,6 +172,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   # sha256 truncated to 32 bits — better distribution than cksum/CRC for similar filenames.
   BASENAME_HASH=$(( 16#$(printf '%s' "${BASENAME}" | sha256sum | cut -c1-8) ))
   MIXED_SEED=$(( (BASENAME_HASH << 20) + ${SEED:-1} ))
+  echo "MIXED_SEED=${MIXED_SEED} (used for bg skip calculation)"
 
   if [[ -n "${BG_FILES:-}" ]]; then
     while read -r bg_file; do
@@ -198,7 +199,7 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
         --json-summary ${LOG_TEMP}/${TASKNAME}.hepmcmerger.prmon.json \
         -- \
       SignalBackgroundMerger \
-        --rngSeed ${MIXED_SEED} \
+        --rngSeed ${SEED:-1} \
         --nSlices ${EVENTS_PER_TASK} \
         --signalSkip ${SKIP_N_EVENTS} \
         --signalFile ${INPUT_FILE} \

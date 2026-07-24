@@ -167,6 +167,13 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
   STABLE_STATUSES="$((${SIGNAL_STATUS_VALUE}+1))"
   DECAY_STATUSES="$((${SIGNAL_STATUS_VALUE}+2))"
 
+  # Mix BASENAME hash into seed so different signal files decorrelate, not just task index.
+  # Shift hash into high bits so it can't cancel with task-index low bits (2^20 task headroom).
+  # sha256 truncated to 32 bits — better distribution than cksum/CRC for similar filenames.
+  BASENAME_HASH=$(( 16#$(printf '%s' "${BASENAME}" | sha256sum | cut -c1-8) ))
+  MIXED_SEED=$(( (BASENAME_HASH << 20) + ${SEED:-1} ))
+  echo "MIXED_SEED=${MIXED_SEED} (used for bg skip calculation)"
+
   if [[ -n "${BG_FILES:-}" ]]; then
     while read -r bg_file; do
       file=$(echo "$bg_file" | jq -r '.file')
@@ -174,12 +181,6 @@ if [[ "$EXTENSION" == "hepmc3.tree.root" ]]; then
 
       # bg events per signal event = freq[kHz]*1e3 * INTEGRATION_WINDOW[ns]*1e-9 = freq*window*1e-6
       skip=$(awk "BEGIN {print (${freq})*(${INTEGRATION_WINDOW})*1e-6}")
-
-      # Mix BASENAME hash into seed so different signal files decorrelate, not just task index.
-      # Shift hash into high bits so it can't cancel with task-index low bits (2^20 task headroom).
-      # sha256 truncated to 32 bits — better distribution than cksum/CRC for similar filenames.
-      BASENAME_HASH=$(( 16#$(printf '%s' "${BASENAME}" | sha256sum | cut -c1-8) ))
-      MIXED_SEED=$(( (BASENAME_HASH << 20) + SEED ))
 
       # Rate-scaled advance + seed-driven random offset. Rate term preserves bg-per-signal proportionality;
       # random term decorrelates parallel tasks. Merger wraps bg file, so large offsets are safe.

@@ -9,6 +9,7 @@ from pathlib import Path
 from rucio.client import Client
 from rucio.common.exception import (
     DataIdentifierAlreadyExists,
+    DuplicateContent,
     FileAlreadyExists,
 )
 
@@ -129,7 +130,7 @@ for dataset_name, files in datasets.items():
                 name=dataset_name,
                 dids=batch,
             )
-        except Exception:
+        except (DuplicateContent, FileAlreadyExists):
             # ignore already attached
             pass
 

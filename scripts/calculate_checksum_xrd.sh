@@ -20,6 +20,7 @@ OUTPUT="${2:-files_with_sizes_checksums.txt}"
 XRD_HOST="root://dtn-rucio.jlab.org"
 
 # Long-listing format on this server: flags owner group size date time path
+# shellcheck disable=SC2034  # owner/group/date/time are placeholders
 xrdfs "$XRD_HOST" ls -l -R "$1" | while read -r flags owner group size date time file; do
     # skip directory entries (flags start with 'd')
     [[ $flags == d* ]] && continue

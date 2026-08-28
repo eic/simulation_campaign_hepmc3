@@ -5,6 +5,7 @@
 #   <size> <adler32> <path>
 #
 # Usage: calculate_checksum_xrd.sh <xrootd-path> [output-file]
+# The server defaults to root://dtn-rucio.jlab.org; override with $XRD_HOST.
 # Example:
 #   calculate_checksum_xrd.sh /volatile/eic/EPIC/EVGEN/EXCLUSIVE/DIFFRACTIVE_JPSI_ABCONV/lAger3.6.1-1.0
 #
@@ -17,7 +18,7 @@ if [ -z "$1" ]; then
 fi
 
 OUTPUT="${2:-files_with_sizes_checksums.txt}"
-XRD_HOST="root://dtn-rucio.jlab.org"
+XRD_HOST="${XRD_HOST:-root://dtn-rucio.jlab.org}"
 
 # Long-listing format on this server: flags owner group size date time path
 # shellcheck disable=SC2034  # owner/group/date/time are placeholders
